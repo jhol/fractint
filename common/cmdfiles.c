@@ -1054,7 +1054,8 @@ int cmdarg(char *curarg,int mode) /* process a single argument */
    argptr = value;
    numval = totparms = intparms = floatparms = 0;
    while (*argptr) {                    /* count and pre-parse parms */
-      long ll;
+      unsigned long ll;
+      char firstchar;
       lastarg = 0;
       if ((argptr2 = strchr(argptr,'/')) == NULL) {     /* find next '/' */
          argptr2 = argptr + strlen(argptr);
@@ -1077,6 +1078,13 @@ int cmdarg(char *curarg,int mode) /* process a single argument */
          if (totparms < 16) {floatval[totparms] = j; floatvalstr[totparms]="0";}
          if (totparms < 64) intval[totparms] = j;
          if (totparms == 0) numval = j;
+         }
+      else if (sscanf(argptr,"%c%ld%c",&firstchar,&ll,&tmpc) > 0
+        && firstchar == '-' && tmpc == '/') { /* got a negative integer */
+         ++floatparms; ++intparms;
+         if (totparms < 16) {floatval[totparms] = 0.0 - ll; floatvalstr[totparms]=argptr;}
+         if (totparms < 64) intval[totparms] = 0 - (int)ll;
+         if (totparms == 0) numval = 0 - (int)ll;
          }
       else if (sscanf(argptr,"%ld%c",&ll,&tmpc) > 0       /* got an integer */
         && tmpc == '/') {        /* needs a long int, ll, here for lyapunov */
