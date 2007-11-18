@@ -109,6 +109,7 @@ BYTE far *mapdacbox = NULL;     /* map= (default colors)    */
 int     colorstate;             /* 0, dacbox matches default (bios or map=) */
                                 /* 1, dacbox matches no known defined map   */
                                 /* 2, dacbox matches the colorfile map      */
+                                /* 3, dacbox rotation of the colorfile map  */
 int     colorpreloaded;         /* if dacbox preloaded for next mode select */
 int     save_release;           /* release creating PAR file*/
 char    dontreadcolor=0;        /* flag for reading color from GIF */
@@ -2999,7 +3000,10 @@ static int parse_colors(char *value)
          dacbox[i][0] = dacbox[i][1] = dacbox[i][2] = 40;
          ++i;
          }
-      colorstate = 1;
+      if (colorstate == 2) /* read in map name, but it is rotated */
+         colorstate = 3;
+      else
+         colorstate = 1;
       }
    colorpreloaded = 1;
    memcpy(olddacbox,dacbox,256*3);
