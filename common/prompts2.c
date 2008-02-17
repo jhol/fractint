@@ -896,7 +896,9 @@ get_view_restart:
 
       if ((unsigned long)sxdots > estm_xmax)
          sxdots = (int)estm_xmax;
+#ifndef XFRACT
       sxdots &= truebytes&1 ? -8 : truebytes - 6;
+#endif
       if (sxdots < 2)
          sxdots = 2;
       if (sydots == 0 && dotmode == 28) { /* auto by aspect ratio request */
