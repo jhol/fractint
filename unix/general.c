@@ -179,6 +179,7 @@ keypressed(void) {
     } else if (ch==TAB && tabmode) {
 	keybuffer = 0;
 	tab_display();
+	ungetakey(ENTER);
 	return 0;
     }
     return ch;
@@ -247,6 +248,7 @@ int block;
 {
     int ch;
     int curkey;
+
     if (keybuffer) {
 	ch = keybuffer;
 	keybuffer = 0;

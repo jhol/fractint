@@ -54,7 +54,7 @@ static char far s_errorstart[] = {"*** Error during startup:"};
 #endif
 static char far s_escape_cancel[] = {"Escape to cancel, any other key to continue..."};
 static char far s_anykey[] = {"Any key to continue..."};
-#if !defined(PRODUCTION) && !defined(XFRACT)
+#ifndef PRODUCTION
 static char far s_custom[] = {"Customized Version"};
 static char far s_incremental[] = {"Incremental release"};
 #endif
@@ -317,7 +317,7 @@ void helptitle()
    putstringcenter(0,0,80,C_TITLE,msg);
    
 /* uncomment next for production executable: */
-#if defined(PRODUCTION) || defined(XFRACT)
+#ifdef PRODUCTION
     return;
    /*NOTREACHED*/
 #else
@@ -1071,6 +1071,29 @@ static int menutype;
 #define MENU_HDG 3
 #define MENU_ITEM 1
 
+int check_exit()
+{
+      int i;
+#ifdef XFRACT
+      static char far s[] = "Exit from Xfractint (y/n)? y";
+#else
+      static char far s[] = "Exit from Fractint (y/n)? y";
+#endif
+      helptitle();
+      setattr(1,0,C_GENERAL_MED,24*80);
+      for (i = 9; i <= 11; ++i)
+         setattr(i,18,C_GENERAL_INPUT,40);
+      putstringcenter(10,18,40,C_GENERAL_INPUT,s);
+      movecursor(25,80);
+      while ((i = getakey()) != 'y' && i != 'Y' && i != 13) {
+         if (i == 'n' || i == 'N') {
+            return 0;
+	 }
+      }
+      goodbye();
+      return 1;
+}
+
 int main_menu(int fullmenu)
 {
    char far *choices[44]; /* 2 columns * 22 rows */
@@ -1122,7 +1145,7 @@ top:
 #ifdef XFRACT
    choicekey[nextleft+=2] = DELETE;
    attributes[nextleft] = MENU_ITEM;
-   LOADPROMPTSCHOICES(nextleft,"draw fractal           <D>  ");
+   LOADPROMPTSCHOICES(nextleft,"draw fractal           <d>  ");
 #else
    choicekey[nextleft+=2] = DELETE;
    attributes[nextleft] = MENU_ITEM;
@@ -1222,11 +1245,7 @@ top:
       attributes[nextright] = MENU_ITEM;
       LOADPROMPTSCHOICES(nextright,"print image          <ctl-p>  ");
       }
-#ifdef XFRACT
-   choicekey[nextright+=2] = 'd';
-   attributes[nextright] = MENU_ITEM;
-   LOADPROMPTSCHOICES(nextright,"shell to Linux/Unix      <d>  ");
-#else
+#ifndef XFRACT
    choicekey[nextright+=2] = 'd';
    attributes[nextright] = MENU_ITEM;
    LOADPROMPTSCHOICES(nextright,"shell to dos             <d>  ");
@@ -1234,12 +1253,17 @@ top:
    choicekey[nextright+=2] = 'g';
    attributes[nextright] = MENU_ITEM;
    LOADPROMPTSCHOICES(nextright,"give command string      <g>  ");
-   choicekey[nextright+=2] = ESC;
+#ifdef XFRACT   
+   choicekey[nextright+=2] = 'u';
    attributes[nextright] = MENU_ITEM;
-   LOADPROMPTSCHOICES(nextright,"quit "FRACTINT"           <esc> ");
+   LOADPROMPTSCHOICES(nextright,"list of contributors     <u>  ");
+#endif
    choicekey[nextright+=2] = INSERT;
    attributes[nextright] = MENU_ITEM;
-   LOADPROMPTSCHOICES(nextright,"restart "FRACTINT"        <ins> ");
+   LOADPROMPTSCHOICES(nextright,"restart "FRACTINT"       <ins> ");
+   choicekey[nextright+=2] = ESC;
+   attributes[nextright] = MENU_ITEM;
+   LOADPROMPTSCHOICES(nextright,"quit "FRACTINT"          <esc> ");
 #ifdef XFRACT
    if (fullmenu && (gotrealdac || fake_lut) && colors >= 16) {
 #else
@@ -1297,30 +1321,17 @@ top:
             }
          }
       }
+
    if (i == ESC) {             /* escape from menu exits Fractint */
-#ifdef XFRACT
-      static char far s[] = "Exit from Xfractint (y/n)? y";
-#else
-      static char far s[] = "Exit from Fractint (y/n)? y";
-#endif
-      helptitle();
-      setattr(1,0,C_GENERAL_MED,24*80);
-      for (i = 9; i <= 11; ++i)
-         setattr(i,18,C_GENERAL_INPUT,40);
-      putstringcenter(10,18,40,C_GENERAL_INPUT,s);
-      movecursor(25,80);
-      while ((i = getakey()) != 'y' && i != 'Y' && i != 13) {
-         if (i == 'n' || i == 'N')
-            goto top;
-         }
-      goodbye();
+      if (!check_exit()) goto top;
       }
    if (i == TAB) {
       tab_display();
       i = 0;
       }
-   if (i == ENTER || i == ENTER_2)
+   if (i == ENTER || i == ENTER_2) {
       i = 0;                 /* don't trigger new calc */
+   }
    tabmode = oldtabmode;
    return(i);
 }
@@ -1340,11 +1351,11 @@ static int menu_checkkey(int curkey,int choice)
 #endif
    if(testkey == '2')
       testkey = '@';
-   if (strchr("#@2txyzgvir3dj",testkey) || testkey == INSERT || testkey == 2
+   if (strchr("#@2txyzgvir3jdu",testkey) || testkey == INSERT || testkey == 2
      || testkey == ESC || testkey == DELETE || testkey == 6) /*RB 6== ctrl-F for sound menu */
       return(0-testkey);
    if (menutype) {
-      if (strchr("\\sobpkrh",testkey) || testkey == TAB
+      if (strchr("\\sobpkha",testkey) || testkey == TAB
         || testkey == 1 || testkey == 5 || testkey == 8
         || testkey == 16
         || testkey == 19 || testkey == 21) /* ctrl-A, E, H, P, S, U */

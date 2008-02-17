@@ -16,7 +16,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef NCURSES
 #include <curses.h>
+#endif
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -43,6 +45,9 @@
 #include "helpdefs.h"
 #include "port.h"
 #include "prototyp.h"
+#ifndef NCURSES
+#include "xfcurses.h"
+#endif
 
 #ifdef LINUX
 #ifndef FNDELAY
@@ -91,7 +96,44 @@ extern int rotate_hi;
 
 extern void fpe_handler();
 
+extern Window Xwp;
 extern WINDOW *curwin;
+extern int screenctr;
+
+#define DEFX 640
+#define DEFY 480
+#define DEFXY "640x480+0+0"
+
+Display *Xdp = NULL;
+Window Xw;
+Window Xroot;
+GC Xgc = NULL;
+Visual *Xvi;
+Screen *Xsc = NULL;
+Atom wm_delete_window, wm_protocols;
+Colormap	Xcmap;
+int Xdscreen;
+int Xdepth;
+char *Xdisplay = "";
+char *Xgeometry = NULL;
+char *PSviewer = "gv";
+
+XImage *Ximage =NULL;
+int Xwinwidth=DEFX,Xwinheight=DEFY;
+static Pixmap	Xpixmap = 0;
+static XSizeHints *size_hints = NULL;
+static int gravity;
+static int xlastcolor = -1;
+static int xlastfcn = GXcopy;
+static BYTE *pixbuf = NULL;
+
+static int step = 0;
+static int cyclic[][3] = { 
+{1,3,5}, {1,5,3}, {3,1,5}, {3,5,1}, {5,1,3}, {5,3,1}, 
+{1,3,7}, {1,7,3}, {3,1,7}, {3,7,1}, {7,1,3}, {7,3,1}, 
+{1,5,7}, {1,7,5}, {5,1,7}, {5,7,1}, {7,1,5}, {7,5,1}, 
+{3,5,7}, {3,7,5}, {5,3,7}, {5,7,3}, {7,3,5}, {7,5,3}
+};
 
 static int onroot = 0;
 static int fullscreen = 0;
@@ -104,15 +146,12 @@ static int simple_input = 0; /* Use simple input (debugging) */
 static int resize_flag = 0; /* Main window being resized ? */
 static int drawing_or_drawn = 0; /* Is image (being) drawn ? */
 
-static char *Xdisplay = "";
-static char *Xgeometry = NULL;
-
 static int unixDisk = 0; /* Flag if we use the disk video mode */
 
 static int old_fcntl;
 
 static int doesBacking;
-
+int ctrl_window = 0;
 /*
  * The pixtab stuff is so we can map from fractint pixel values 0-n to
  * the actual color table entries which may be anything.
@@ -219,6 +258,23 @@ int *i;
 	Xgeometry = argv[(*i)+1];
 	(*i)++;
 	return 1;
+    }  else if (strcmp(argv[*i],"-psviewer")==0 && *i+1<argc) {
+	PSviewer = argv[(*i)+1];
+	(*i)++;
+	return 1;
+#ifndef NCURSES
+    } else if (strcmp(argv[*i],"-ctrlwindow")==0) {
+	ctrl_window = 1;
+	return 1;
+    } else if (strcmp(argv[*i],"-font")==0 && *i+1<argc) {
+	Xfontname = Xfontnamebold = argv[(*i)+1];
+	(*i)++;
+	return 1;
+    } else if (strcmp(argv[*i],"-fontbold")==0 && *i+1<argc) {
+	Xfontnamebold = argv[(*i)+1];
+	(*i)++;
+	return 1;
+#endif
     } else {
 	return 0;
     }
@@ -380,36 +436,6 @@ char *addr;
 }
 #endif
 
-#define DEFX 640
-#define DEFY 480
-#define DEFXY "640x480+0+0"
-
-static Display *Xdp = NULL;
-static Window Xw;
-static GC Xgc = NULL;
-static Visual *Xvi;
-static Screen *Xsc;
-static Colormap	Xcmap;
-static int Xdepth;
-static XImage *Ximage =NULL;
-static int Xdscreen;
-static Pixmap	Xpixmap = 0;
-static int Xwinwidth=DEFX,Xwinheight=DEFY;
-static XSizeHints *size_hints = NULL;
-static int gravity;
-static Window Xroot;
-static int xlastcolor = -1;
-static int xlastfcn = GXcopy;
-static BYTE *pixbuf = NULL;
-
-static int step = 0;
-static int cyclic[][3] = { 
-{1,3,5}, {1,5,3}, {3,1,5}, {3,5,1}, {5,1,3}, {5,3,1}, 
-{1,3,7}, {1,7,3}, {3,1,7}, {3,7,1}, {7,1,3}, {7,3,1}, 
-{1,5,7}, {1,7,5}, {5,1,7}, {5,7,1}, {7,1,5}, {7,5,1}, 
-{3,5,7}, {3,7,5}, {5,3,7}, {5,7,3}, {7,3,5}, {7,5,3}
-};
-
 static void
 select_visual(void)
 {
@@ -471,10 +497,14 @@ initUnixWindow()
 {
   XSetWindowAttributes Xwatt;
   XGCValues Xgcvals;
-  int Xwinx = 0, Xwiny = 0;
-  int i;
+  int i, Xwinx = 0, Xwiny = 0;
 
-  if (Xdp != NULL) {
+  if (Xdp != NULL
+#ifdef NCURSES
+      ) {
+#else
+      && Xsc != NULL) {
+#endif
     /* We are already initialized */
     return;
   }
@@ -490,7 +520,6 @@ initUnixWindow()
    * string */
 
   if (unixDisk) {
-    int offx, offy;
     fastmode = 0;
     fake_lut = 0;
     istruecolor = 0;
@@ -504,7 +533,7 @@ initUnixWindow()
       colors = fixcolors;
     }
     if (Xgeometry) {
-      XParseGeometry(Xgeometry, &offx, &offy, (unsigned int *) &Xwinwidth,
+      XParseGeometry(Xgeometry, &Xwinx, &Xwiny, (unsigned int *) &Xwinwidth,
 		     (unsigned int *) &Xwinheight);
     }
     Xwinwidth &= -4;
@@ -519,19 +548,10 @@ initUnixWindow()
        UnixDone();
        exit(-1);
     }
-
-    if (Xgeometry) {
-       size_hints->flags = USSize | PBaseSize | PResizeInc;
-    }
-    else {
-       size_hints->flags = PSize | PBaseSize | PResizeInc;
-    }
-    size_hints->base_width = 320;
-    size_hints->base_height = 200;
-    size_hints->width_inc = 4;
-    size_hints->height_inc = 4;
   
+#ifdef NCURSES
     Xdp = XOpenDisplay(Xdisplay);
+
     if (Xdp == NULL) {
       fprintf(stderr, "Could not open display %s\n", Xdisplay);
       fprintf(stderr, "Note: xfractint can run without X in -disk mode\n");
@@ -539,15 +559,18 @@ initUnixWindow()
       exit(-1);
     }
     Xdscreen = XDefaultScreen(Xdp);
+#else
+    Open_XDisplay();
+#endif
     if (Xgeometry && !onroot) {
-      int offx, offy;
-      XParseGeometry(Xgeometry, &offx, &offy, (unsigned int *) &Xwinwidth,
+      XParseGeometry(Xgeometry, &Xwinx, &Xwiny, (unsigned int *) &Xwinwidth,
 		     (unsigned int *) &Xwinheight);
 /* next line breaks -geometry, JCO
       XWMGeometry(Xdp, Xdscreen, Xgeometry, DEFXY, 0, size_hints,
 		&Xwinx, &Xwiny, &Xwinwidth, &Xwinheight, &gravity);
 */
     }
+    
     if (synch) {
       XSynchronize(Xdp, True);
     }
@@ -564,6 +587,14 @@ initUnixWindow()
     }
     sxdots = Xwinwidth;
     sydots = Xwinheight;
+
+    size_hints->flags = USPosition | USSize | PBaseSize | PResizeInc;
+    size_hints->base_width = 320;
+    size_hints->base_height = 200;
+    size_hints->width_inc = 4;
+    size_hints->height_inc = 4;
+    size_hints->x = Xwinx;
+    size_hints->y = Xwiny;
 
     Xwatt.background_pixel = BlackPixelOfScreen(Xsc);
     Xwatt.bit_gravity = StaticGravity;
@@ -583,6 +614,11 @@ initUnixWindow()
       XSetWindowBackgroundPixmap(Xdp, Xroot, Xpixmap);
     } else {
       Xroot = DefaultRootWindow(Xdp);
+#ifndef NCURSES
+      if (Xwc && !ctrl_window)
+	Xw = Xwc;
+      else
+#endif
       Xw = XCreateWindow(Xdp, Xroot, Xwinx, Xwiny, Xwinwidth,
 			 Xwinheight, 0, Xdepth, InputOutput, CopyFromParent,
 			 CWBackPixel | CWBitGravity | CWBackingStore, &Xwatt);
@@ -593,13 +629,16 @@ initUnixWindow()
     if (rotate_hi == 255) rotate_hi = colors-1;
 
     XSetWMNormalHints(Xdp, Xw, size_hints);
+    wm_protocols = XInternAtom(Xdp, "WM_PROTOCOLS", False);
+    wm_delete_window = XInternAtom(Xdp, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(Xdp, Xw, &wm_delete_window, 1);
 
     if (!onroot) {
       XSetBackground(Xdp, Xgc, FAKE_LUT(pixtab[0]));
       XSetForeground(Xdp, Xgc, FAKE_LUT(pixtab[1]));
       Xwatt.background_pixel = FAKE_LUT(pixtab[0]);
       XChangeWindowAttributes(Xdp, Xw, CWBackPixel, &Xwatt);
-      XMapWindow(Xdp, Xw);
+      XMapRaised(Xdp, Xw);
     }
   }
 
@@ -642,10 +681,14 @@ doneXwindow()
     if (size_hints) {
        XFree(size_hints);
     }
+    if (Xwp)
+       XDestroyWindow(Xdp, Xwp);
     /*
     XCloseDisplay(Xdp);
     */
     Xdp = NULL;
+    while (screenctr)
+       discardscreen();
 }
 
 /*
@@ -809,7 +852,7 @@ resizeWindow()
        XGetGeometry(Xdp, parent, &root, &junki, &junki,
            &width, &height, &junkui, &junkui);
        XResizeWindow(Xdp, Xw, width, height);
-       XSync(Xdp, False);
+       XSync(Xdp, True);
        usleep(100000);
     } else
        XGetGeometry(Xdp,Xw,&junkw,&junki, &junki, &width, &height,
@@ -1428,6 +1471,11 @@ translatekey(ch)
 int ch;
 {
     if (ch>='a' && ch<='z') {
+/*  Can't do this here.
+        if (ch == 'd') {
+           return DELETE;
+	}
+*/
 	return ch;
     } else {
 	switch (ch) {
@@ -1500,8 +1548,12 @@ int ch;
 		return F5;
 	    case '^':
 		return F6;
+/* JPD : removed the next case since this interferes with shell_to_dos
+   Anyway shell_to_dos is almost useless with modern xfractint ... */
+#if 0
 	    case '&':
 		return F7;
+#endif
 	    case '*':
 		return F8;
 	    case '(':
@@ -1754,6 +1806,27 @@ xhandleevents()
 	XNextEvent(Xdp,&xevent);
 
 	switch (((XAnyEvent *)&xevent)->type) {
+	    case ClientMessage:
+                if (xevent.xclient.message_type == wm_protocols &&
+                    xevent.xclient.format == 32 &&
+                    xevent.xclient.data.l[0] == wm_delete_window) {
+#ifndef NCURSES
+		    if (xevent.xexpose.window == Xwp) {  /* Popup window */
+		      XDestroyWindow(Xdp, Xwp);
+		      Xwp = None;
+                      if (Xmessage)
+			free(Xmessage);
+                      Xmessage = NULL;
+                      return;
+		    }
+#endif
+                    stackscreen();
+                    check_exit();
+                    unstackscreen();
+                    xbufkey = ESC;
+                    return;
+	        }
+                break;
 	    case KeyRelease:
 		{
 		char buffer[1];
@@ -1868,50 +1941,55 @@ xhandleevents()
 			xbufkey = shift_mode ? SF10: F10;
 			return;
 		    case '+':
-			 xbufkey = ctl_mode ? CTL_PLUS : '+';
-			 return;
+		        if (Xdepth>=12) 
+			  xbufkey = 0;
+                        else
+			  xbufkey = ctl_mode ? CTL_PLUS : '+';
+			return;
 		    case '-':
-			 xbufkey = ctl_mode ? CTL_MINUS : '-';
-			 return;
-			 break;
-#if 0
+		        if (Xdepth>=12) 
+			  xbufkey = 0;
+                        else
+			  xbufkey = ctl_mode ? CTL_MINUS : '-';
+			return;
+			break;
+#if 1
 /* The following need to be somewhere else, otherwise these keys are not available */
 /* in any other mode.  For example, the '0' and '=' keys won't work with the <g> command */
 /* or the <b> command. JCO 06-23-2001 */
-                    case XK_0:
-		    case XK_KP_0:
+                    case XK_dollar:
 			 step = 0;
 			 initdacbox();
-			 if (drawing_or_drawn) xbufkey = 'D';
+			 if (drawing_or_drawn) xbufkey = 'd';
 			 return;
 		    case XK_exclam:
 			 step = (step & 126) + 1 - (step & 1);
 			 initdacbox();
-			 if (drawing_or_drawn) xbufkey = 'D';
+			 if (drawing_or_drawn) xbufkey = 'd';
 			 return;
 		    case XK_greater:
 			 step = (step+2) % 50;
 			 initdacbox();
-			 xbufkey = 'D';
+			 xbufkey = 'd';
 			 return;
 		    case XK_less:
 		         step = (step+48) % 50;
 			 initdacbox();
-			 if (drawing_or_drawn) xbufkey = 'D';
+			 if (drawing_or_drawn) xbufkey = 'd';
 			 return;
 		    case XK_parenright:
 			 step = (step+12) % 50;
 			 initdacbox();
-			 if (drawing_or_drawn) xbufkey = 'D';
+			 if (drawing_or_drawn) xbufkey = 'd';
 			 return;
 		    case XK_parenleft:
 			 step = (step+38) % 50;
 			 initdacbox();
-			 if (drawing_or_drawn) xbufkey = 'D';
+			 if (drawing_or_drawn) xbufkey = 'd';
 			 return;
-		    case XK_equal:
+/*		    case XK_equal: see comments above */
 		    case XK_KP_Equal:
-                         xbufkey = 'D';
+                         xbufkey = 'd';
 			 return;
 #endif
                     case XK_Return:
@@ -1929,6 +2007,8 @@ xhandleevents()
 		break;
 	    case MotionNotify:
 		{
+	        if (screenctr) 
+                    break;
 		if (editpal_cursor && !inside_help) {
 		    while ( XCheckWindowEvent(Xdp,Xw,PointerMotionMask,
 			&xevent)) {}
@@ -1964,6 +2044,8 @@ xhandleevents()
 		{
 		int done = 0;
 		int banding = 0;
+	        if (screenctr) 
+                    break;
 		if (lookatmouse==3 || zoomoff == 0) {
 		    lastx = xevent.xbutton.x;
 		    lasty = xevent.xbutton.y;
@@ -2051,7 +2133,13 @@ xhandleevents()
 		drawn = drawing_or_drawn;
 		if (resizeWindow()) {
 		  if (drawn) {
-		     xbufkey = 'D';
+#ifndef NCURSES
+		     if (!ctrl_window && screenctr) {
+		        xbufkey = 0;
+                        return;
+                     } 
+#endif
+		     xbufkey = 'd';
 		     return;
 		  }
 		}
@@ -2060,6 +2148,17 @@ xhandleevents()
                     PointerMotionMask|StructureNotifyMask);
 		break;
             case Expose:
+#ifndef NCURSES
+	        if (xevent.xexpose.window == Xwp) {
+		    xpopup(NULL);
+		    break;
+	        }
+	        if ((ctrl_window && (xevent.xexpose.window == Xwc)) ||
+                    (!ctrl_window && screenctr)) {
+		    refresh(0, LINES);
+                    break;
+		}
+#endif
 		if (!doesBacking) {
 		int x,y,w,h;
 		x = xevent.xexpose.x;
@@ -2073,7 +2172,6 @@ xhandleevents()
 		    h = sydots-y;
 		}
 		if (x<sxdots && y<sydots && w>0 && h>0) {
-
 		    XPutImage(Xdp,Xw,Xgc,Ximage,xevent.xexpose.x,
 			    xevent.xexpose.y, xevent.xexpose.x,
 			    xevent.xexpose.y, xevent.xexpose.width,
@@ -2328,7 +2426,8 @@ xgetfont()
   return fontPtr;
 }
 
-/*
+#if 0
+/*  Don't need this since we can open a terminal externally.  JCO
  *----------------------------------------------------------------------
  *
  * shell_to_dos --
@@ -2347,6 +2446,11 @@ xgetfont()
 void
 shell_to_dos()
 {
+#ifndef NCURSES
+    char cmd[256];
+    sprintf(cmd, "xterm -geometry 80x32 -fn \"%s\" &", Xfontname);
+    system(cmd);
+#else
     SignalHandler sigint;
     char *shell;
     char *argv[2];
@@ -2402,7 +2506,9 @@ shell_to_dos()
 
     signal(SIGINT, (SignalHandler)sigint);
     putchar('\n');
+#endif
 }
+#endif
 
 /*
  *----------------------------------------------------------------------

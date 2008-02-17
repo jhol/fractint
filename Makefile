@@ -1,5 +1,21 @@
 SHELL=/bin/sh
 
+# Architecture
+# automatic detection
+ARCH = `uname -m | tr "_" "-"`
+# ARCH = pentium
+# ARCH = x86-64
+# ARCH = athlon64
+
+# Optimization flags
+OPT = -O2
+# OPT = -O
+
+# Uncomment the second line if you want to compile with ncurses support
+# (as in older versions of xfractint)
+NCURSES =
+# NCURSES = -DNCURSES
+
 # SRCDIR should be a path to the directory that will hold fractint.hlp
 # SRCDIR should also hold the .par, .frm, etc. files
 SRCDIR = /usr/share/xfractint
@@ -54,7 +70,7 @@ NOBSTRING = -DNOBSTRING
 # AIX may need -D_ALL_SOURCE -D_NONSTD_TYPES to compile help.c
 # For Dec Alpha, add -DFTIME -DNOBSTRING -DDIRENT
 # For SGI, you may have to add -DSYSVSGI
-DEFINES = -DXFRACT $(NOBSTRING) $(HAVESTRI) $(DEBUG)
+DEFINES = -DXFRACT $(NCURSES) $(NOBSTRING) $(HAVESTRI) $(DEBUG)
 
 # Uncomment this if you get errors about "stdarg.h" missing.
 #DEFINES += -DUSE_VARARGS
@@ -90,16 +106,14 @@ AFLAGS = -f elf -w+orphan-labels
 ifeq ($(AS),/usr/bin/nasm)
 
 #CFLAGS = -I. -D_CONST $(DEFINES)
-CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -O2 \
-         -march=pentium -DNASM -fno-builtin
-#         -march=athlon64 -DNASM -fno-builtin
+CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
+         -march=$(ARCH) -DNASM -fno-builtin
 #CFLAGS = -I. $(DEFINES) -g -DBIG_ANSI_C -DLINUX -Os -DNASM -fno-builtin
 
 else
 
-CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -O2 \
-         -march=pentium -fno-builtin
-#         -march=athlon64 -fno-builtin
+CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
+         -march=$(ARCH) -fno-builtin
 #CFLAGS = -I. $(DEFINES) -g -DBIG_ANSI_C -DLINUX -Os -fno-builtin
 
 endif
@@ -120,10 +134,18 @@ CC = /usr/bin/gcc
 # For Solaris, add -L/usr/openwin/lib; change -lncurses to -lcurses
 # if you get undefined symbols like "w32addch".
 # For Linux, use
-#LIBS = -L/usr/X11R6/lib -lX11 -lm -lncurses
-LIBS = -L/usr/X11R6/lib -lX11 -lm -lncurses
-#LIBS = -L/usr/X11R6/lib64 -lX11 -lm -lncurses
-#LIBS = -lX11 -lm -lcurses
+# LIBS = -L/usr/X11R6/lib -lX11 -lm -lncurses
+# LIBS = -lX11 -lm -lcurses
+
+ifeq ($(ARCH),athlon64)
+LIBS = -L/usr/X11R6/lib64 -lX11 -lm
+else
+LIBS = -L/usr/X11R6/lib -lX11 -lm
+endif
+
+ifeq ($(NCURSES),-DNCURSES)
+LIBS += -lncurses
+endif
 
 # HPUX fixes thanks to David Allport, Bill Broadley, and R. Lloyd.
 # AIX fixes thanks to David Sanderson & Elliot Jaffe.
@@ -147,12 +169,13 @@ prompts2.c realdos.c rotate.c slideshw.c soi.c soi1.c stereo.c \
 targa.c testpt.c tgaview.c zoom.c Makefile
 
 NEWSRC = calcmand.c calmanfp.c diskvidu.c \
-fpu087.c fracsuba.c general.c \
+fpu087.c fracsuba.c general.c xfcurses.c \
 video.c unix.c unixscr.c unix.h Makefile xfract_a.inc \
 calmanfx.asm
 
 HEADERS = big.h biginit.h cmplx.h externs.h fmath.h fractint.h fractype.h \
-helpcom.h lsys.h mpmath.h port.h prototyp.h targa.h targa_lc.h tplus.h
+helpcom.h lsys.h mpmath.h port.h prototyp.h targa.h targa_lc.h tplus.h \
+xfcurses.h
 
 DOCS = debugfla.txt fractsrc.txt hc.txt
 
@@ -218,7 +241,7 @@ ifeq ($(AS),/usr/bin/nasm)
 
 U_OBJS = \
 $(UDIR)/calcmand.o $(UDIR)/calmanfp.o $(UDIR)/diskvidu.o $(UDIR)/fpu087.o \
-$(UDIR)/fracsuba.o $(UDIR)/general.o $(UDIR)/unix.o \
+$(UDIR)/fracsuba.o $(UDIR)/general.o $(UDIR)/unix.o $(UDIR)/xfcurses.o \
 $(UDIR)/unixscr.o $(UDIR)/video.o \
 $(UDIR)/calmanfx.o
 
@@ -226,7 +249,7 @@ else
 
 U_OBJS = \
 $(UDIR)/calcmand.o $(UDIR)/calmanfp.o $(UDIR)/diskvidu.o $(UDIR)/fpu087.o \
-$(UDIR)/fracsuba.o $(UDIR)/general.o $(UDIR)/unix.o \
+$(UDIR)/fracsuba.o $(UDIR)/general.o $(UDIR)/unix.o $(UDIR)/xfcurses.o \
 $(UDIR)/unixscr.o $(UDIR)/video.o
 
 endif
@@ -239,11 +262,11 @@ HOBJS = $(DOSHELPDIR)/hc.o unix.o
 
 xfractint: fractint.hlp .WAIT
 	if [ -f $(DOSHELPDIR)/helpdefs.h ] ; then mv -f $(DOSHELPDIR)/helpdefs.h $(HFD) ; fi
-	cd common ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS}" "SRCDIR=${SRCDIR}" \
+	cd common ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS} ${OPT}" "SRCDIR=${SRCDIR}" \
 	          "HFD=.${HFD}"
-	cd unix ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS}" "SRCDIR=${SRCDIR}" \
+	cd unix ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS} ${OPT}" "SRCDIR=${SRCDIR}" \
 	          "AS=${AS}" "AFLAGS=${AFLAGS}" "HFD=.${HFD}"
-	$(CC) -o xfractint $(CFLAGS) $(OBJS) $(U_OBJS) $(LIBS)
+	$(CC) -o xfractint $(CFLAGS) $(OPT) $(OBJS) $(U_OBJS) $(LIBS)
 #	strip xfractint
 
 tar:	$(FILES)
@@ -321,7 +344,7 @@ hc:	$(HOBJS)
 	$(CC) -o hc $(CFLAGS) $(HOBJS)
 
 unix.o: $(UDIR)/unix.c
-	$(CC) $(CFLAGS) -DSRCDIR=\"$(SRCDIR)\" -c $(UDIR)/unix.c
+	$(CC) $(CFLAGS) $(OPT) -DSRCDIR=\"$(SRCDIR)\" -c $(UDIR)/unix.c
 
 copy: $(FILES)
 	mv $(FILES) backup

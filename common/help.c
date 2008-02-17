@@ -125,16 +125,29 @@ static void displaycc(int row, int col, int color, int ch)
        *
        */
 
-      if (color & INVERSE)
+      /* JPD : colors have to be correctly set for xfractint ... */
+      if (color & INVERSE) /* active link */
+#if defined(XFRACT) && ! defined(NCURSES)
+	 color = 0xb1;
+#else
          color = (signed int)INVERSE;
-      else if (color & BRIGHT)
+#endif
+      else if (color & BRIGHT) /* inactive link */
          {
-         color = 0;   /* normal */
+#if defined(XFRACT) && ! defined(NCURSES)
+         color = 0x71;
+#else
+         color = 0;
          if (ch>='a' && ch<='z')
             ch += 'A' - 'a';
+#endif
          }
-      else
-         color = 0;   /* normal */
+      else /* normal */
+#if defined(XFRACT) && ! defined(NCURSES)
+         color = 0x70;
+#else
+         color = 0;
+#endif
       }
 
    s[0] = (char)ch;
@@ -247,7 +260,7 @@ static void display_parse_text(char far *text, unsigned len, int start_margin, i
                      }
                   }
                else if (tok == TOK_WORD )
-                  display_text(row, col, C_HELP_BODY, curr, width);
+		  display_text(row, col, C_HELP_BODY, curr, width);
 
                col += width;
                curr += size;
@@ -917,6 +930,14 @@ int help(int action)
    unstackscreen();
    lookatmouse = oldlookatmouse;
    helpmode = oldhelpmode;
+#ifdef XFRACT
+   while (keypressed())
+       getakey();
+   ungetakey(ENTER);
+#ifndef NCURSES
+   refresh(0,0);
+#endif
+#endif      
    timer_start += clock_ticks();
 
    return(0);

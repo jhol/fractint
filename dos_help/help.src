@@ -299,6 +299,17 @@ Fixed a bug in the virtual video code where the screen width was being
   patch 5, and is needed because other passes= options are hard coded to
   use arrays of this size.
 
+  Jean-Pierre Demailly provided changes to eliminate the use of ncurses with
+  Xfractint.
+
+  Included a patch from Andrew Church and the people at Gentoo that fixes a
+  filename buffer overflow.
+
+  Fixed a seg fault in Xfractint caused by not unstacking all the screens before
+  exiting.
+
+  Removed the shell-to-DOS option in Xfractint.
+
 Patch 7 to Version 20.4.0\
 
 Added feature to write the base map name to the first line of the file when
@@ -1043,7 +1054,7 @@ Commands marked with an '*' are also available at the credits screen.
    Enter           Continue an interrupted calculation (e.g. after a save)
  * f               toggle the floating-point algorithm option ON or OFF
  * i               Set parameters for 3D fractal types
- * Insert          Restart the program (at the credits screen)
+ * Insert          List of contributors
    a               Convert the current image into a fractal 'starfield'
    Ctrl-A          Turn on screen-eating ant automaton
    Ctrl-S          Convert current image to a Random Dot Stereogram (RDS)
