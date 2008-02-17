@@ -281,8 +281,23 @@ typically have a short life and are updated frequently. They may have
 bug fixes, and thus be more stable, but they may also have new features
 which very likely have new bugs.
 
-Version 20.4.7 is an update of Fractint 20.0 based on the developer's
-  version 20.4.6.  New features include:
+Version 20.4.8 is an update of Fractint 20.0 based on the developer's
+  version 20.4.7.  New features include:
+
+Patch 8 to Version 20.4.0\
+
+Fixed a bug in the virtual video code where the screen width was being
+  reduced when going from a text screen back to the graphics screen.
+
+  Revised logic that calculates the maximum X and Y resolutions possible
+  with a given initial virtual screen size.  Because of the variable type being
+  used, the maximum size is 32767 even if sufficient video memory is available
+  to support higher resolutions.
+
+  Added back in code that forces passes=1 when either the X or Y
+  resolution is greater than 2048.  This was inadvertently removed with
+  patch 5, and is needed because other passes= options are hard coded to
+  use arrays of this size.
 
 Patch 7 to Version 20.4.0\
 
