@@ -99,6 +99,8 @@ loop_intro:
       delay(100);
    if ((j = keypressed()) == ESC)
       goto intro_end;
+   if (j == DELETE)
+      goto intro_end;
    if (j)
       getakey();
    if (j == 32) { /* spacebar pauses */
@@ -112,13 +114,15 @@ wait_again:
          goto intro_end;
       getakey();
       if (j!= 32)
-	 goto wait_again;
+         goto wait_again;
    }
 
    delaymax = 15;
    scrollup(toprow, botrow);
+#ifdef XFRACT
 #ifndef NCURSES /* implementation of xfcurses requires refresh */
    refresh(toprow, botrow+2);
+#endif
 #endif
    i++;
    if (credits[authors[i]] == 0)
@@ -142,6 +146,8 @@ wait_again:
 intro_end:
    lookatmouse = oldlookatmouse;                /* restore the mouse-checking */
    helpmode = oldhelpmode;
+#ifdef XFRACT
    putprompt();
+#endif
    return ;
    }

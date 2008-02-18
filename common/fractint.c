@@ -446,7 +446,7 @@ imagestart:                             /* calc/display a new image */
          }
 #else
       if (kbdchar == 'd') {                     /* redraw image in Xfractint */
-         calc_status = 0;
+         initmode = adapter;
          goto imagestart;
          }
 #endif
