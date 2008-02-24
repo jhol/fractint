@@ -339,7 +339,6 @@ putstring (row, col, attr, msg)
      CHAR far *msg;
 {
   int so = 0;
-
   if (row != -1)
     textrow = row;
   if (col != -1)
@@ -387,9 +386,11 @@ putstring (row, col, attr, msg)
       wstandend (curwin);
     }
 
-  wrefresh (curwin);
 #ifdef NCURSES
+  wrefresh (curwin);
   fflush (stdout);
+#else
+  XFlush(Xdp);
 #endif
   getyx (curwin, textrow, textcol);
   textrow -= textrbase;
@@ -443,7 +444,11 @@ scrollup (top, bot)
   wdeleteln (curwin);
   wmove (curwin, bot, 0);
   winsertln (curwin);
+#ifdef NCURSES
   wrefresh (curwin);
+#else
+  refresh(top, bot+1);
+#endif
 }
 
 /*

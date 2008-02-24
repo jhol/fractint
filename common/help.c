@@ -128,7 +128,7 @@ static void displaycc(int row, int col, int color, int ch)
       /* JPD : colors have to be correctly set for xfractint ... */
       if (color & INVERSE) /* active link */
 #if defined(XFRACT) && ! defined(NCURSES)
-	 color = 0xb1;
+         color = 0xB1;
 #else
          color = (signed int)INVERSE;
 #endif
@@ -137,7 +137,7 @@ static void displaycc(int row, int col, int color, int ch)
 #if defined(XFRACT) && ! defined(NCURSES)
          color = 0x71;
 #else
-         color = 0;
+         color = (signed int)INVERSE;
          if (ch>='a' && ch<='z')
             ch += 'A' - 'a';
 #endif

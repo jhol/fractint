@@ -18,7 +18,7 @@
 #include "fractype.h"
 #include "helpdefs.h"
 
-static int menu_checkkey(int curkey,int choice);
+int menu_checkkey(int curkey,int choice);
 
 /* uncomment following for production version */
 /*
@@ -51,6 +51,7 @@ int patchlevel=8; /* patchlevel for DOS version */
    */
 #ifdef XFRACT
 static char far s_errorstart[] = {"*** Error during startup:"};
+extern char * Xmessage;
 #endif
 static char far s_escape_cancel[] = {"Escape to cancel, any other key to continue..."};
 static char far s_anykey[] = {"Any key to continue..."};
@@ -80,11 +81,14 @@ int stopmsg (int flags, char far *msg)
    if (active_system == 0 /* DOS */
      && first_init) {     /* & cmdfiles hasn't finished 1st try */
 #ifdef XFRACT
+     /*
       setvideotext();
       buzzer(2);
       putstring(0,0,15,s_errorstart);
       putstring(2,0,15,msg);
       movecursor(8,0);
+     */
+      xpopup(msg);
       sleep(1);
       UnixDone();
       exit(1);
@@ -145,22 +149,29 @@ static int  textxdots,textydots;
       (HCGA hi-res with old bios), or when there isn't 10k of temp mem free. */
 int texttempmsg(char far *msgparm)
 {
+#ifdef XFRACT
+   xpopup(msgparm);
+   return(-1);
+#else
    if (showtempmsg(msgparm))
       return(-1);
-#ifndef XFRACT
-   while (!keypressed()) ; /* wait for a keystroke but don't eat it */
-#else
-   waitkeypressed(0); /* wait for a keystroke but don't eat it */
-#endif
+   while (!keypressed()) ; /* wait for a keystroke but don't eat */
    cleartempmsg();
    return(0);
+#endif
 }
 
 void freetempmsg()
 {
+#ifdef XFRACT
+   if (Xmessage)
+      free(Xmessage);
+   Xmessage = NULL;
+#else
    if(temptextsave != 0)
       MemoryRelease(temptextsave);
    temptextsave = 0;
+#endif
 }
 
 int showtempmsg(char far *msgparm)
@@ -357,7 +368,9 @@ int putstringcenter(int row, int col, int width, int attr, char far *msg)
    int i,j,k;
    i = 0;
 #ifdef XFRACT
+#if 0
    if (width>=80) width=79; /* Some systems choke in column 80 */
+#endif
 #endif
    while (msg[i]) ++i; /* strlen for a far */
    if (i == 0) return(-1);
@@ -1067,6 +1080,7 @@ int strncasecmp(char far *s,char far *t,int ct)
    choices[X]= (char far *)tmp;\
    }
 
+int exitpending = 0;
 static int menutype;
 #define MENU_HDG 3
 #define MENU_ITEM 1
@@ -1074,11 +1088,9 @@ static int menutype;
 int check_exit()
 {
       int i;
-#ifdef XFRACT
-      static char far s[] = "Exit from Xfractint (y/n)? y";
-#else
-      static char far s[] = "Exit from Fractint (y/n)? y";
-#endif
+      static char far s[] = "Exit from "Fractint" (y/n)? y";
+   
+      exitpending = 1;
       helptitle();
       setattr(1,0,C_GENERAL_MED,24*80);
       for (i = 9; i <= 11; ++i)
@@ -1087,6 +1099,7 @@ int check_exit()
       movecursor(25,80);
       while ((i = getakey()) != 'y' && i != 'Y' && i != 13) {
          if (i == 'n' || i == 'N') {
+	    exitpending = 0;
             return 0;
 	 }
       }
@@ -1243,7 +1256,7 @@ top:
       LOADPROMPTSCHOICES(nextright,"save current parameters..<b>  ");
       choicekey[nextright+=2] = 16;
       attributes[nextright] = MENU_ITEM;
-      LOADPROMPTSCHOICES(nextright,"print image          <ctl-p>  ");
+      LOADPROMPTSCHOICES(nextright,"print image            <ctl-p>  ");
       }
 #ifndef XFRACT
    choicekey[nextright+=2] = 'd';
@@ -1277,7 +1290,7 @@ top:
       LOADPROMPTSCHOICES(nextright,"color cycling mode       <c>  ");
       choicekey[nextright+=2] = '+';
       attributes[nextright] = MENU_ITEM;
-      LOADPROMPTSCHOICES(nextright,"rotate palette      <+>, <->  ");
+      LOADPROMPTSCHOICES(nextright,"rotate palette         <+>,<->  ");
       if (colors > 16) {
          if (!reallyega) {
             choicekey[nextright+=2] = 'e';
@@ -1298,7 +1311,7 @@ top:
    LOADPROMPTSCHOICES(nextright,   "stereogram             <ctl-s>");
 
    i = (keypressed()) ? getakey() : 0;
-   if (menu_checkkey(i,0) == 0) {
+   if (menu_checkkey(i,1) == 0) {
       helpmode = HELPMAIN;         /* switch help modes */
       if ((nextleft += 2) < nextright)
          nextleft = nextright + 1;
@@ -1340,10 +1353,10 @@ top:
 #pragma code_seg ()         /* back to normal segment */
 #endif
 
-static int menu_checkkey(int curkey,int choice)
+int menu_checkkey(int curkey,int choice)
 { /* choice is dummy used by other routines called by fullscreen_choice() */
    int testkey;
-   testkey = choice; /* for warning only */
+   menutype = choice; /* for intro screen only */
    testkey = (curkey>='A' && curkey<='Z') ? curkey+('a'-'A') : curkey;
 #ifdef XFRACT
    /* We use F2 for shift-@, annoyingly enough */

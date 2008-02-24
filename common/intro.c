@@ -85,23 +85,15 @@ void intro(void)
    movecursor(25,80); /* turn it off */
    helpmode = HELPMENU;
 
-#ifdef XFRACT
-#ifndef NCURSES
-   refresh(0, 25);
-#endif
-#endif
-
 loop_intro:
 #ifdef XFRACT
    if (slowdisplay) delaymax *= 15;
 #endif
    for (j = 0; j < delaymax && !(keypressed()); j++)
       delay(100);
-   if ((j = keypressed()) == ESC)
+   if (menu_checkkey(keypressed(),0))
       goto intro_end;
-   if (j == DELETE)
-      goto intro_end;
-   if (j)
+   if (j = keypressed()) /* set j to returned key */
       getakey();
    if (j == 32) { /* spacebar pauses */
 wait_again:
@@ -110,7 +102,7 @@ wait_again:
 #else
       waitkeypressed(0);
 #endif
-      if ((j = keypressed()) == ESC)
+      if (menu_checkkey(keypressed(),0))
          goto intro_end;
       getakey();
       if (j!= 32)
@@ -119,11 +111,6 @@ wait_again:
 
    delaymax = 15;
    scrollup(toprow, botrow);
-#ifdef XFRACT
-#ifndef NCURSES /* implementation of xfcurses requires refresh */
-   refresh(toprow, botrow+2);
-#endif
-#endif
    i++;
    if (credits[authors[i]] == 0)
       i = 0;
@@ -131,11 +118,6 @@ wait_again:
    credits[authors[i+1]] = 0;
    putstring(botrow,0,C_CONTRIB,&credits[authors[i]]);
    credits[authors[i+1]] = oldchar;
-#ifdef XFRACT
-#ifndef NCURSES /* implementation of xfcurses requires refresh */
-   refresh(botrow, botrow+2);
-#endif
-#endif
    movecursor(25,80); /* turn it off */
    if (!(j = keypressed()))
       goto loop_intro;

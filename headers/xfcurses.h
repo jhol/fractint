@@ -71,6 +71,7 @@ extern void wstandend(WINDOW *win);
 
 extern WINDOW *newwin(int nlines, int ncols, int begin_y, int begin_x);
 extern WINDOW *initscr(void);
+extern void set_margins(int width, int height);
 
 #define getyx(win,y,x)	 (y = (win)->_cur_y, x = (win)->_cur_x)
 

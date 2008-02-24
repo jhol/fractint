@@ -81,6 +81,10 @@ extern	int	inside_help;
 extern  float	finalaspectratio;
 extern  float	screenaspect;
 extern	int	lookatmouse;
+extern	int	exitpending;
+#ifndef NCURSES
+extern	int	textmargin;
+#endif
 
 extern struct videoinfo videotable[];
 
@@ -228,6 +232,9 @@ int *i;
 	return 1;
     } else if (strcmp(argv[*i],"-disk")==0) {
 	unixDisk = 1;
+#ifndef NCURSES
+	ctrl_window = 1; /* force a control window */
+#endif
 	return 1;
     } else if (strcmp(argv[*i],"-onroot")==0) {
 	onroot = 1;
@@ -265,6 +272,12 @@ int *i;
 #ifndef NCURSES
     } else if (strcmp(argv[*i],"-ctrlwindow")==0) {
 	ctrl_window = 1;
+	return 1;
+    } else if (strcmp(argv[*i],"-textmargin")==0 && *i+1<argc) {
+        textmargin = atoi(argv[(*i)+1]);
+        if (textmargin<0) textmargin = 0;
+        if (textmargin>200) textmargin = 200;
+	(*i)++;
 	return 1;
     } else if (strcmp(argv[*i],"-font")==0 && *i+1<argc) {
 	Xfontname = Xfontnamebold = argv[(*i)+1];
@@ -367,6 +380,8 @@ UnixDone()
     if (!simple_input) {
 	fcntl(0,F_SETFL,old_fcntl);
     }
+    while (screenctr)
+       discardscreen();
     mvcur(0,COLS-1, LINES-1,0);
     nocbreak();
     echo();
@@ -474,6 +489,10 @@ select_visual(void)
   }
   if (colors > 256)
     colors = 256;
+  if (gotrealdac)
+    active_system = 0;
+  else
+    active_system = 1;
 }
 
 /*
@@ -622,6 +641,9 @@ initUnixWindow()
       Xw = XCreateWindow(Xdp, Xroot, Xwinx, Xwiny, Xwinwidth,
 			 Xwinheight, 0, Xdepth, InputOutput, CopyFromParent,
 			 CWBackPixel | CWBitGravity | CWBackingStore, &Xwatt);
+      XSelectInput(Xdp, Xw, ExposureMask|StructureNotifyMask|
+                   KeyPressMask|KeyReleaseMask|
+		   ButtonPressMask|ButtonReleaseMask|PointerMotionMask);
       XStoreName(Xdp, Xw, Fractint);
       Xgc = XCreateGC(Xdp, Xw, 0, &Xgcvals);
     }
@@ -687,8 +709,6 @@ doneXwindow()
     XCloseDisplay(Xdp);
     */
     Xdp = NULL;
-    while (screenctr)
-       discardscreen();
 }
 
 /*
@@ -847,13 +867,17 @@ resizeWindow()
     if (resize_flag) {
        Window root, parent, *children;
        resize_flag = 0;
+       parent = 0;
        XQueryTree(Xdp, Xw, &root, &parent, &children, &junkui);
-       if (!parent) return 0;
+       if (!parent) parent = Xw;
        XGetGeometry(Xdp, parent, &root, &junki, &junki,
            &width, &height, &junkui, &junkui);
-       XResizeWindow(Xdp, Xw, width, height);
-       XSync(Xdp, True);
-       usleep(100000);
+#ifndef NCURSES
+       if (!ctrl_window) {
+	   set_margins(width, height);
+           refresh(0, LINES);
+       }
+#endif
     } else
        XGetGeometry(Xdp,Xw,&junkw,&junki, &junki, &width, &height,
 	    &junkui, &junkui);
@@ -869,7 +893,7 @@ resizeWindow()
 	Xwinheight = sydots;
 	screenaspect = sydots/(float)sxdots;
 	finalaspectratio = screenaspect;
-     Xpad = 8;  /* default, unless changed below */
+        Xpad = 8;  /* default, unless changed below */
         if (Xdepth==1)
            Xmwidth = 1 + sxdots/8;
         else if (Xdepth<=8)
@@ -900,7 +924,12 @@ resizeWindow()
 		    Ximage->height);
 	    exit(-1);
 	}
-	clearXwindow();
+        if (screenctr) {
+	   bzero(Ximage->data, Ximage->bytes_per_line*Ximage->height);
+           drawing_or_drawn = 0;
+	}
+        XSync(Xdp, True);
+        usleep(10000);
 	return 1;
     } else {
 	return 0;
@@ -1791,17 +1820,19 @@ xhandleevents()
 {
     XEvent xevent;
     int drawn;
-    static int ctl_mode = 0;
-    static int shift_mode = 0;
+    int ctl_mode, shift_mode, bnum;
     int bandx0,bandy0,bandx1,bandy1;
-    static int bnum=0;
     static int lastx,lasty;
     static int dx,dy;
+
+    ctl_mode = 0;
+    shift_mode = 0;
+    bnum = 0;
 
     if (doredraw) {
 	redrawscreen();
     }
-
+   
     while (XPending(Xdp) && !xbufkey) {
 	XNextEvent(Xdp,&xevent);
 
@@ -1820,6 +1851,8 @@ xhandleevents()
                       return;
 		    }
 #endif
+		    if (exitpending)
+		      goodbye();
                     stackscreen();
                     check_exit();
                     unstackscreen();
@@ -2127,25 +2160,13 @@ xhandleevents()
 		}
 		break;
             case ConfigureNotify:
-	        XSelectInput(Xdp,Xw,KeyPressMask|KeyReleaseMask|ExposureMask|
-		    ButtonPressMask|ButtonReleaseMask|PointerMotionMask);
 	        resize_flag = 1;
-		drawn = drawing_or_drawn;
 		if (resizeWindow()) {
-		  if (drawn) {
-#ifndef NCURSES
-		     if (!ctrl_window && screenctr) {
-		        xbufkey = 0;
-                        return;
-                     } 
-#endif
-		     xbufkey = 'd';
-		     return;
-		  }
+		   if (!ctrl_window && screenctr)
+		      xbufkey = 0;
+                   else
+		      xbufkey = 'd';
 		}
-	        XSelectInput(Xdp,Xw,KeyPressMask|KeyReleaseMask|ExposureMask|
-		    ButtonPressMask|ButtonReleaseMask|
-                    PointerMotionMask|StructureNotifyMask);
 		break;
             case Expose:
 #ifndef NCURSES
@@ -2587,9 +2608,5 @@ redrawscreen()
     alarmon = 0;
   }
   doredraw = 0;
-  if (!unixDisk)
-    XSelectInput(Xdp,Xw,KeyPressMask|KeyReleaseMask|ExposureMask|
-	    ButtonPressMask|ButtonReleaseMask|
-            PointerMotionMask|StructureNotifyMask);
 }
 
