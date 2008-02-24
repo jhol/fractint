@@ -81,14 +81,15 @@ int stopmsg (int flags, char far *msg)
    if (active_system == 0 /* DOS */
      && first_init) {     /* & cmdfiles hasn't finished 1st try */
 #ifdef XFRACT
-     /*
+#ifdef NCURSES
       setvideotext();
       buzzer(2);
       putstring(0,0,15,s_errorstart);
       putstring(2,0,15,msg);
       movecursor(8,0);
-     */
+#else
       xpopup(msg);
+#endif
       sleep(1);
       UnixDone();
       exit(1);
@@ -149,7 +150,7 @@ static int  textxdots,textydots;
       (HCGA hi-res with old bios), or when there isn't 10k of temp mem free. */
 int texttempmsg(char far *msgparm)
 {
-#ifdef XFRACT
+#if defined(XFRACT) && !defined(NCURSES)
    xpopup(msgparm);
    return(-1);
 #else
@@ -163,7 +164,7 @@ int texttempmsg(char far *msgparm)
 
 void freetempmsg()
 {
-#ifdef XFRACT
+#if defined(XFRACT) && !defined(NCURSES)
    if (Xmessage)
       free(Xmessage);
    Xmessage = NULL;

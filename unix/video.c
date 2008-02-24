@@ -113,7 +113,7 @@ int video_vram = 0;
 
 struct videoinfo videotable[MAXVIDEOTABLE] = {
   {"xfractint mode           ", "                         ",
-   999, 0, 0, 0, 0, 19, 640, 480, 256},
+   999, 0, 0, 0, 0, 19, 800, 600, 256},
   {"unused  mode             ", "                         ",
    0, 0, 0, 0, 0, 0, 0, 0, 0},
 };

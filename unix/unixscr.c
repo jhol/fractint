@@ -104,9 +104,9 @@ extern Window Xwp;
 extern WINDOW *curwin;
 extern int screenctr;
 
-#define DEFX 640
-#define DEFY 480
-#define DEFXY "640x480+0+0"
+#define DEFX 800
+#define DEFY 600
+#define DEFXY "800x600+0+0"
 
 Display *Xdp = NULL;
 Window Xw;
@@ -703,8 +703,10 @@ doneXwindow()
     if (size_hints) {
        XFree(size_hints);
     }
+#ifndef NCURSES
     if (Xwp)
        XDestroyWindow(Xdp, Xwp);
+#endif
     /*
     XCloseDisplay(Xdp);
     */
