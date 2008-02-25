@@ -30,7 +30,6 @@
 #include "port.h"
 #include "prototyp.h"
 
-#define BRIGHT 0x4000
 #define ATTRSIZE sizeof(short)
 
 extern int ctrl_window;
@@ -39,7 +38,7 @@ extern int helpmode;
 extern XImage *Ximage;
 extern int screenctr;
 
-static GC Xwcgc = None;
+GC Xwcgc = None;
 static XFontStruct * font, * fontbold;
 static unsigned long black, white;
 static XSetWindowAttributes Xwatt;
@@ -118,22 +117,6 @@ void clear(void)
   wclear(curwin);
 }
 
-int standout(void)
-{
-  hilit = 0x2000;
-  if (screenctr)
-     XSetFont(Xdp, Xwcgc, fontbold->fid);
-  return 1;
-}
-
-int standend(void)
-{
-  hilit = 0;
-  if (screenctr)
-     XSetFont(Xdp, Xwcgc, font->fid);
-  return 1;
-}
-
 void endwin(void)
 {
 }
@@ -143,7 +126,6 @@ void delwin(WINDOW *win)
   if (curwin) free(curwin->_text);
   free(curwin);
   XClearWindow(Xdp, Xwc);
-  standend();
 }
 
 void fill_rectangle(int x, int y, int n)
@@ -184,12 +166,6 @@ void waddch(WINDOW *win, const chtype ch)
      win->_text[j] = (char) ch;
 
   win->_attr[j] = (short) win->_cur_attr;
-  
-  if (win->_cur_attr & BRIGHT)
-    standout();
-  else
-    standend();
-
   setcolor_bg(win, -1);
   fill_rectangle(win->_cur_x, win->_cur_y, 1);
 
@@ -220,15 +196,9 @@ void waddstr(WINDOW *win, const char *str)
      win->_text[j] = str[i];
      win->_attr[j] = (short) win->_cur_attr;
   }
-  
+
   setcolor_bg(win, -1);
   fill_rectangle(win->_cur_x, win->_cur_y, n);
-
-  if (win->_cur_attr & BRIGHT)
-     standout();
-  else
-     standend();
-
   setcolor_fg(win, -1);
   XDrawString(Xdp, Xwc, Xwcgc, 
               charx + win->_cur_x * charwidth, 
@@ -254,11 +224,6 @@ void draw_caret(WINDOW *win, int y, int x)
       win->_car_y>=0 && win->_car_y<LINES) {
      j = win->_car_y * win->_num_x + win->_car_x;
      *str = win->_text[j];
-     if (win->_attr[j] & BRIGHT)
-        standout();
-     else
-        standend();
-
      setcolor_bg(win, j);
      fill_rectangle(win->_car_x, win->_car_y, 1);
      if (*str) {
@@ -371,10 +336,6 @@ void xrefresh(WINDOW *win, int line1, int line2)
        setcolor_bg(win, j);
        fill_rectangle(x, y, 1);
        setcolor_fg(win, j);
-       if (win->_attr[j] & BRIGHT) 
-          standout();
-       else
-          standend();
        if (win->_text[j])
          str[0] = win->_text[j];
        else
@@ -394,16 +355,6 @@ void touchwin(WINDOW *win)
 
 void wtouchln(WINDOW *win, int y, int n, int changed)
 {
-}
-
-void wstandout(WINDOW *win)
-{
-  standout();
-}
-
-void wstandend(WINDOW *win)
-{
-  standend();
 }
 
 WINDOW *newwin(int nlines, int ncols, int begin_y, int begin_x)
@@ -527,7 +478,6 @@ WINDOW *initscr(void)
   clear();
   if (ctrl_window)
      XMapRaised(Xdp, Xwc);
-  standend();
   return NULL;
 }
 

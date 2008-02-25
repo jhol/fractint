@@ -19,6 +19,9 @@ struct	_win_st
 #define	WINDOW struct _win_st
 #define stdscr NULL
 
+#define INVERSE 0x8000
+#define BRIGHT 0x4000
+
 typedef unsigned chtype;
 
 extern Display *Xdp;

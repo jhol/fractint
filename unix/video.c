@@ -20,6 +20,7 @@ extern int ctrl_window;
 
 #ifndef NCURSES
 extern unsigned long pixel[48];
+extern GC Xwcgc;
 #endif
 
 int fake_lut = 0;
@@ -84,10 +85,14 @@ int textsafe = 0;		/* 0 = default, runup chgs to 1
 				   2 = no, use 640x200
 				   3 = bios, yes plus use int 10h-1Ch
 				   4 = save, save entire image */
-int text_type = 1;		/* current mode's type of text:
-				   0  = real text, mode 3 (or 7)
+#ifdef NCURSES
+int text_type = 1;		/* current mode's type of text: */
+#else
+				/* 0  = real text, mode 3 (or 7)
 				   1  = 640x200x2, mode 6
 				   2  = some other mode, graphics */
+int text_type = 0;		
+#endif
 int textrow = 0;		/* for putstring(-1,...) */
 int textcol = 0;		/* for putstring(..,-1,...) */
 int textrbase = 0;		/* textrow is relative to this */
@@ -338,21 +343,42 @@ putstring (row, col, attr, msg)
      int row, col, attr;
      CHAR far *msg;
 {
+#ifndef NCURSES
+  int foregnd = attr & 15;
+  int backgnd = (attr >> 4) & 15;
+  int tmp_attr;
+#endif
   int so = 0;
+
   if (row != -1)
     textrow = row;
   if (col != -1)
     textcol = col;
 
 #ifndef NCURSES
-  curwin->_cur_attr = attr;
-#endif
-
+  if (attr & BRIGHT && !(attr & INVERSE)) { /* bright */
+    foregnd += 8;
+  }
+  if (attr & INVERSE) { /* inverse video */
+    XSetBackground(Xdp, Xwcgc, pixel[foregnd]);
+    tmp_attr = backgnd;
+  }
+  else {
+    XSetBackground(Xdp, Xwcgc, pixel[backgnd]);
+    tmp_attr = foregnd;
+  }
+#else
   if (attr & INVERSE || attr & BRIGHT)
     {
       wstandout (curwin);
       so = 1;
     }
+#endif
+
+#ifndef NCURSES
+  curwin->_cur_attr = attr;
+#endif
+
 
   wmove (curwin, textrow + textrbase, textcol + textcbase);
   while (1)
@@ -409,8 +435,26 @@ setattr (row, col, attr, count)
      int row, col, attr, count;
 {
   int i,j;
+#ifndef NCURSES
+  int foregnd = attr & 15;
+  int backgnd = (attr >> 4) & 15;
+  int tmp_attr;
+#endif
+
   movecursor (row, col);
 #ifndef NCURSES
+  if (attr & BRIGHT && !(attr & INVERSE)) { /* bright */
+    foregnd += 8;
+  }
+  if (attr & INVERSE) { /* inverse video */
+    XSetBackground(Xdp, Xwcgc, pixel[foregnd]);
+    tmp_attr = backgnd;
+  }
+  else {
+    XSetBackground(Xdp, Xwcgc, pixel[backgnd]);
+    tmp_attr = foregnd;
+  }
+
   curwin->_cur_attr = attr;
   for (i=0; i<count; i++)
     waddch (curwin, '\0');

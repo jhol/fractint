@@ -180,6 +180,7 @@ static int doredraw = 0; /* 1 if we have a redraw waiting */
 static Window FindRootWindow(void);
 static Window pr_dwmroot(Display *dpy, Window pwin);
 static int errhand(Display *dp, XErrorEvent *xe);
+static int ioerrhand(Display *dp);
 static int getachar(void);
 static int handleesc(void); 
 static int translatekey(int ch); 
@@ -327,12 +328,14 @@ UnixInit()
     cbreak();
     noecho();
 
+#ifdef NCURSES
     if (standout()) {
 	text_type = 1;
 	standend();
     } else {
 	text_type = 1;
     }
+#endif
 
     initdacbox();
 
@@ -343,6 +346,7 @@ UnixInit()
     /*
     signal(SIGTSTP,goodbye);
     */
+
 #ifdef FPUERR
     signal(SIGABRT,SIG_IGN);
     /*
@@ -413,6 +417,30 @@ XErrorEvent *xe;
 		xe->request_code, xe->minor_code);
         XGetErrorText(dp,xe->error_code,buf,200);
         printf("%s\n",buf);
+        return(0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ioerrhand --
+ *
+ *	Called on an X IO server error.
+ *
+ * Results:
+ * None.
+ *
+ * Side effects:
+ * Prints the error message.
+ *
+ *----------------------------------------------------------------------
+ */
+static int ioerrhand(dp)
+Display *dp;
+{
+        UnixDone();
+        fflush(stdout);
+        printf("Fatal X IO error on display %s\n", DisplayString(dp));
         return(0);
 }
 
@@ -594,6 +622,7 @@ initUnixWindow()
       XSynchronize(Xdp, True);
     }
     XSetErrorHandler(errhand);
+    XSetIOErrorHandler(ioerrhand);
     Xsc = ScreenOfDisplay(Xdp, Xdscreen);
     select_visual();
     if (fixcolors > 0) {
