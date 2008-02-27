@@ -441,7 +441,13 @@ setattr (row, col, attr, count)
   int tmp_attr;
 #endif
 
-  movecursor (row, col);
+  if (row != -1)
+    textrow = row;
+  if (col != -1)
+    textcol = col;
+
+  wmove (curwin, textrow + textrbase, textcol + textcbase);
+
 #ifndef NCURSES
   if (attr & BRIGHT && !(attr & INVERSE)) { /* bright */
     foregnd += 8;
