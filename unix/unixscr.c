@@ -100,7 +100,6 @@ extern int rotate_hi;
 
 extern void fpe_handler();
 
-extern Window Xwp;
 extern WINDOW *curwin;
 extern int screenctr;
 
@@ -109,8 +108,8 @@ extern int screenctr;
 #define DEFXY "800x600+0+0"
 
 Display *Xdp = NULL;
-Window Xw;
-Window Xroot;
+Window Xw = None;
+Window Xroot = None;
 GC Xgc = NULL;
 Visual *Xvi;
 Screen *Xsc = NULL;
@@ -124,6 +123,8 @@ char *PSviewer = "gv";
 
 XImage *Ximage =NULL;
 int Xwinwidth=DEFX,Xwinheight=DEFY;
+int unixDisk = 0; /* Flag if we use the disk video mode */
+
 static Pixmap	Xpixmap = 0;
 static XSizeHints *size_hints = NULL;
 static int gravity;
@@ -145,17 +146,18 @@ static int sharecolor = 0;
 static int privatecolor = 0;
 static int fixcolors = 0;
 static int synch = 0; /* Run X events synchronously (debugging) */
-int slowdisplay = 0; /* We have a slow display, so don't print too much */
 static int simple_input = 0; /* Use simple input (debugging) */
-static int resize_flag = 0; /* Main window being resized ? */
 static int drawing_or_drawn = 0; /* Is image (being) drawn ? */
-
-static int unixDisk = 0; /* Flag if we use the disk video mode */
-
 static int old_fcntl;
-
 static int doesBacking;
-int ctrl_window = 0;
+
+int ctrl_window = 0; /* Don't use a control window by default */
+int slowdisplay = 0; /* We have a slow display, so don't print too much */
+int resize_flag = 1; /* Window resize flags */
+                     /* Bit 2^0 : we are on start-up */
+                     /* Bit 2^1 : Ximage recreated - needs recalculation */
+                     /* Bit 2^2 : window has been resized from WM */
+
 /*
  * The pixtab stuff is so we can map from fractint pixel values 0-n to
  * the actual color table entries which may be anything.
@@ -177,7 +179,7 @@ static int alarmon = 0; /* 1 if the refresh alarm is on */
 static int doredraw = 0; /* 1 if we have a redraw waiting */
 
 /* Static routines */
-static Window FindRootWindow(void);
+static Window FindRootWindow(Display *dpy, int screen);
 static Window pr_dwmroot(Display *dpy, Window pwin);
 static int errhand(Display *dp, XErrorEvent *xe);
 static int ioerrhand(Display *dp);
@@ -346,7 +348,6 @@ UnixInit()
     /*
     signal(SIGTSTP,goodbye);
     */
-
 #ifdef FPUERR
     signal(SIGABRT,SIG_IGN);
     /*
@@ -386,7 +387,9 @@ UnixDone()
     }
     while (screenctr)
        discardscreen();
+#ifdef NCURSES
     mvcur(0,COLS-1, LINES-1,0);
+#endif
     nocbreak();
     echo();
     endwin();
@@ -428,20 +431,20 @@ XErrorEvent *xe;
  *	Called on an X IO server error.
  *
  * Results:
- * None.
+ *	None. 
  *
  * Side effects:
- * Prints the error message.
+ *	Prints the error message.
  *
  *----------------------------------------------------------------------
  */
 static int ioerrhand(dp)
 Display *dp;
 {
-        UnixDone();
-        fflush(stdout);
-        printf("Fatal X IO error on display %s\n", DisplayString(dp));
-        return(0);
+       UnixDone();
+       fflush(stdout);
+       printf("Fatal X IO error on display %s\n", DisplayString(dp));
+       return(0);
 }
 
 #ifdef FPUERR
@@ -539,6 +542,13 @@ select_visual(void)
  *----------------------------------------------------------------------
  */
 
+void error_display()
+{
+  fprintf(stderr, "Could not open display %s\n", Xdisplay);
+  fprintf(stderr, "Note: 'fractint -disk' can run without X\n");   
+}
+
+
 void
 initUnixWindow()
 {
@@ -567,6 +577,10 @@ initUnixWindow()
    * string */
 
   if (unixDisk) {
+#ifndef  NCURSES
+    Xw = Xwc;
+    stackscreen();
+#endif
     fastmode = 0;
     fake_lut = 0;
     istruecolor = 0;
@@ -590,8 +604,7 @@ initUnixWindow()
   } else {  /* Use X window */
     size_hints = XAllocSizeHints();
     if (size_hints == NULL) {
-       fprintf(stderr, "Could not allocate memory for X size hints \n");
-       fprintf(stderr, "Note: xfractint can run without X in -disk mode\n");
+       error_display();
        UnixDone();
        exit(-1);
     }
@@ -600,8 +613,7 @@ initUnixWindow()
     Xdp = XOpenDisplay(Xdisplay);
 
     if (Xdp == NULL) {
-      fprintf(stderr, "Could not open display %s\n", Xdisplay);
-      fprintf(stderr, "Note: xfractint can run without X in -disk mode\n");
+      error_display();
       UnixDone();
       exit(-1);
     }
@@ -653,7 +665,7 @@ initUnixWindow()
       Xwatt.backing_store = NotUseful;
     }
     if (onroot) {
-      Xroot = FindRootWindow();
+      Xroot = FindRootWindow(Xdp, Xdscreen);
       RemoveRootPixmap();
       Xgc = XCreateGC(Xdp, Xroot, 0, &Xgcvals);
       Xpixmap = XCreatePixmap(Xdp, Xroot, Xwinwidth, Xwinheight, Xdepth);
@@ -723,6 +735,7 @@ doneXwindow()
     }
     if (Xgc) {
 	XFreeGC(Xdp,Xgc);
+        Xgc = None;
     }
     if (Xpixmap) {
 	XFreePixmap(Xdp,Xpixmap);
@@ -733,12 +746,18 @@ doneXwindow()
        XFree(size_hints);
     }
 #ifndef NCURSES
+    if (Xwc!=Xw) {
+       XDestroyWindow(Xdp, Xwc);
+       Xwc = None;
+    }
     if (Xwp)
        XDestroyWindow(Xdp, Xwp);
+    Xwp = None;
 #endif
-    /*
+    if (Xw)
+       XDestroyWindow(Xdp, Xw);
+    Xw = None;
     XCloseDisplay(Xdp);
-    */
     Xdp = NULL;
 }
 
@@ -894,17 +913,20 @@ resizeWindow()
     unsigned int width, height;
     int Xmwidth, Xpad;
 
+#ifdef NCURSES
     if (unixDisk) return 0;
-    if (resize_flag) {
+#endif
+
+    if (resize_flag & 4) {
        Window root, parent, *children;
-       resize_flag = 0;
+       resize_flag &= ~4;
        parent = 0;
        XQueryTree(Xdp, Xw, &root, &parent, &children, &junkui);
        if (!parent) parent = Xw;
        XGetGeometry(Xdp, parent, &root, &junki, &junki,
            &width, &height, &junkui, &junkui);
 #ifndef NCURSES
-       if (!ctrl_window) {
+       if (!ctrl_window || unixDisk) {
 	   set_margins(width, height);
            refresh(0, LINES);
        }
@@ -956,9 +978,13 @@ resizeWindow()
 	    exit(-1);
 	}
         if (screenctr) {
-	   bzero(Ximage->data, Ximage->bytes_per_line*Ximage->height);
+           bzero(Ximage->data, Ximage->bytes_per_line*Ximage->height);
            drawing_or_drawn = 0;
 	}
+        if (resize_flag & 1)
+           resize_flag &= ~1;
+        else
+           resize_flag |= 2;
         XSync(Xdp, True);
         usleep(10000);
 	return 1;
@@ -1482,9 +1508,13 @@ int block;
 	if (block==0 && skipcount<25) break;
 	skipcount = 0;
 
+#ifdef NCURSES
 	if (!unixDisk) {
 	    xhandleevents();
 	}
+#else
+	xhandleevents();
+#endif
 	if (xbufkey) {
 	    ch = xbufkey;
 	    xbufkey = 0;
@@ -1531,11 +1561,6 @@ translatekey(ch)
 int ch;
 {
     if (ch>='a' && ch<='z') {
-/*  Can't do this here.
-        if (ch == 'd') {
-           return DELETE;
-	}
-*/
 	return ch;
     } else {
 	switch (ch) {
@@ -1608,12 +1633,8 @@ int ch;
 		return F5;
 	    case '^':
 		return F6;
-/* JPD : removed the next case since this interferes with shell_to_dos
-   Anyway shell_to_dos is almost useless with modern xfractint ... */
-#if 0
 	    case '&':
 		return F7;
-#endif
 	    case '*':
 		return F8;
 	    case '(':
@@ -2191,7 +2212,7 @@ xhandleevents()
 		}
 		break;
             case ConfigureNotify:
-	        resize_flag = 1;
+	        resize_flag |= 4;
 		if (resizeWindow()) {
 		   if (!ctrl_window && screenctr)
 		      xbufkey = 0;
@@ -2262,9 +2283,6 @@ xhandleevents()
 
 }
 
-#define w_root Xroot
-#define dpy Xdp
-#define scr Xdscreen
 /*
  *----------------------------------------------------------------------
  *
@@ -2292,13 +2310,13 @@ Window  pwin;
 
     if (!XGetWindowAttributes(dpy,pwin,&pxwa)) {
 	printf("Search for root: XGetWindowAttributes failed\n");
-	return RootWindow(dpy, scr);
+	return RootWindow(dpy, Xdscreen);
     }
     if (XQueryTree(dpy,pwin,&root,&parent,&child,&nchild)) {
 	for (i = 0; i < nchild; i++) {
 	    if (!XGetWindowAttributes(dpy,child[i],&cxwa)) {
 		printf("Search for root: XGetWindowAttributes failed\n");
-		return RootWindow(dpy, scr);
+		return RootWindow(dpy, Xdscreen);
 	    }
 	    if (pxwa.width == cxwa.width && pxwa.height == cxwa.height) {
 		return(pr_dwmroot(dpy, child[i]));
@@ -2307,7 +2325,7 @@ Window  pwin;
 	return(pwin);
     } else {
 	printf("xfractint: failed to find root window\n");
-	return RootWindow(dpy, scr);
+	return RootWindow(dpy, Xdscreen);
     }
 }
 
@@ -2326,11 +2344,12 @@ Window  pwin;
  *
  *----------------------------------------------------------------------
  */
+#define w_root Xroot
 static Window
-FindRootWindow()
+FindRootWindow(Display *dpy, int screen)
 {
    int i;
-   w_root = RootWindow(dpy,scr);
+   w_root = RootWindow(dpy, screen);
    w_root = pr_dwmroot(dpy, w_root); /* search for DEC wm root */
 
 {  /* search for swm/tvtwm root (from ssetroot by Tom LaStrange) */

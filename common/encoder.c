@@ -206,7 +206,7 @@ restart:
    if (dotmode != 11)
    {                            /* suppress this on disk-video */
       if (active_system == 0)
-      {                         /* no bars in Windows version */
+      {                         /* no bars in Windows/X11 (most) versions */
          outcolor1 = outcolor1s;
          outcolor2 = outcolor2s;
          for (j = 0; j <= last_colorbar; j++)
@@ -1015,10 +1015,8 @@ nomatch:
             else
               cl_block();
          } /* end for xdot */
-#ifdef XFRACT
-#ifdef NCURSES
          if (dotmode != 11      /* suppress this on disk-video */
-             && active_system == 0      /* and in Windows version     */
+             && active_system == 0      /* and in Windows/X11 (most) versions  */
              && ydot == rownum)
          {
             if ((ydot & 4) == 0)
@@ -1037,8 +1035,6 @@ nomatch:
             }
             last_colorbar = ydot;
          } /* end if dotmode != 11 */
-#endif
-#endif
          tempkey = keypressed();
          if (tempkey && (tempkey != (int)'s'))  /* keyboard hit - bail out */
          {

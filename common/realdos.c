@@ -87,10 +87,10 @@ int stopmsg (int flags, char far *msg)
       putstring(0,0,15,s_errorstart);
       putstring(2,0,15,msg);
       movecursor(8,0);
-#else
-      xpopup(msg);
-#endif
       sleep(1);
+#else
+      fprintf(stderr, "%s\n", msg);
+#endif
       UnixDone();
       exit(1);
 #else

@@ -58,7 +58,7 @@ general.o: general.c ${HFD}/port.h
 
 unix.o: unix.c ${HFD}/port.h
 
-unixscr.o: unixscr.c ${HFD}/port.h ${HFD}/prototyp.h ${HFD}/helpdefs.h
+unixscr.o: unixscr.c ${HFD}/port.h ${HFD}/prototyp.h ${HFD}/helpdefs.h ${HFD}/xfcurses.h
 
 video.o: video.c ${HFD}/port.h ${HFD}/prototyp.h ${HFD}/xfcurses.h
 

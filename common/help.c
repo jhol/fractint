@@ -125,16 +125,16 @@ static void displaycc(int row, int col, int color, int ch)
        *
        */
 
-      if (color & INVERSE) /* active link */
+      if (color & INVERSE)     /* active link */
          color = (signed int)INVERSE;
-      else if (color & BRIGHT)
+      else if (color & BRIGHT) /* inactive link */
          {
          color = 0;   /* normal */
          if (ch>='a' && ch<='z')
             ch += 'A' - 'a';
          }
-      else
-         color = 0;   /* normal */
+      else           /* normal */
+         color = 0;
       }
 
    s[0] = (char)ch;

@@ -30,6 +30,7 @@
 #include "port.h"
 #include "prototyp.h"
 
+#define BRIGHT_INVERSE 0xC000
 #define ATTRSIZE sizeof(short)
 
 extern int ctrl_window;
@@ -37,8 +38,11 @@ extern int Xwinwidth ,Xwinheight;
 extern int helpmode;
 extern XImage *Ximage;
 extern int screenctr;
+extern int unixDisk;
+extern int resize_flag;
+extern void error_display();
 
-GC Xwcgc = None;
+static GC Xwcgc = None;
 static XFontStruct * font, * fontbold;
 static unsigned long black, white;
 static XSetWindowAttributes Xwatt;
@@ -63,7 +67,6 @@ static char * xc[16] = {
   "#FFFFFF"     /* white */
 };
 
-short hilit = 0;
 int charx, chary;
 static int charwidth, charheight, ascent, descent;
 static int Xwcwidth, Xwcheight;
@@ -86,8 +89,7 @@ void Open_XDisplay()
     Xdp = XOpenDisplay(Xdisplay);
 
     if (Xdp == NULL) {
-      fprintf(stderr, "Could not open display %s\n", Xdisplay);
-      fprintf(stderr, "Note: xfractint can run without X in -disk mode\n");
+      error_display();
       exit(-1);
     }
     Xdscreen = XDefaultScreen(Xdp);
@@ -117,6 +119,20 @@ void clear(void)
   wclear(curwin);
 }
 
+int standout(void)
+{
+  if (screenctr)
+     XSetFont(Xdp, Xwcgc, fontbold->fid);
+  return 1;
+}
+
+int standend(void)
+{
+  if (screenctr)
+     XSetFont(Xdp, Xwcgc, font->fid);
+  return 1;
+}
+
 void endwin(void)
 {
 }
@@ -126,6 +142,7 @@ void delwin(WINDOW *win)
   if (curwin) free(curwin->_text);
   free(curwin);
   XClearWindow(Xdp, Xwc);
+  standend();
 }
 
 void fill_rectangle(int x, int y, int n)
@@ -166,6 +183,12 @@ void waddch(WINDOW *win, const chtype ch)
      win->_text[j] = (char) ch;
 
   win->_attr[j] = (short) win->_cur_attr;
+  
+  if (win->_cur_attr & BRIGHT_INVERSE)
+    standout();
+  else
+    standend();
+
   setcolor_bg(win, -1);
   fill_rectangle(win->_cur_x, win->_cur_y, 1);
 
@@ -196,9 +219,15 @@ void waddstr(WINDOW *win, const char *str)
      win->_text[j] = str[i];
      win->_attr[j] = (short) win->_cur_attr;
   }
-
+  
   setcolor_bg(win, -1);
   fill_rectangle(win->_cur_x, win->_cur_y, n);
+
+  if (win->_cur_attr & BRIGHT_INVERSE)
+     standout();
+  else
+     standend();
+
   setcolor_fg(win, -1);
   XDrawString(Xdp, Xwc, Xwcgc, 
               charx + win->_cur_x * charwidth, 
@@ -224,8 +253,18 @@ void draw_caret(WINDOW *win, int y, int x)
       win->_car_y>=0 && win->_car_y<LINES) {
      j = win->_car_y * win->_num_x + win->_car_x;
      *str = win->_text[j];
+     if (win->_attr[j] & BRIGHT_INVERSE)
+        standout();
+     else
+        standend();
+
      setcolor_bg(win, j);
-     fill_rectangle(win->_car_x, win->_car_y, 1);
+     if (win->_car_x>=0 && win->_car_x<COLS &&
+         win->_car_y>=0 && win->_car_y<LINES)
+        XFillRectangle(Xdp, Xwc, Xwcgc, 
+	            charx + win->_car_x * charwidth + 2,
+                    chary + win->_car_y * charheight + 2 ,
+		    charwidth-2, 2);
      if (*str) {
         setcolor_fg(win, j);
         XDrawString(Xdp, Xwc, Xwcgc, 
@@ -239,7 +278,7 @@ void draw_caret(WINDOW *win, int y, int x)
   if (x>=0 && x<COLS && y>=0 && y<LINES)
      XFillRectangle(Xdp, Xwc, Xwcgc, 
 	            charx + x * charwidth + 2,
-                    chary + y * charheight + 2,
+                    chary + y * charheight + 2 ,
 		    charwidth-2, 2);
   XFlush(Xdp);
 caret_end:
@@ -317,7 +356,11 @@ void xrefresh(WINDOW *win, int line1, int line2)
   int x, y, j, topline;
 
   if (screenctr == 0 && !ctrl_window) {
-    XPutImage(Xdp, Xw, Xgc, Ximage, 0, 0, 0, 0, Xwinwidth, Xwinheight);
+    if (resize_flag & 2) {
+       resize_flag &= ~2;
+       ungetakey('d');
+    } else
+       XPutImage(Xdp, Xw, Xgc, Ximage, 0, 0, 0, 0, Xwinwidth, Xwinheight);
     return;
   }
  
@@ -336,6 +379,10 @@ void xrefresh(WINDOW *win, int line1, int line2)
        setcolor_bg(win, j);
        fill_rectangle(x, y, 1);
        setcolor_fg(win, j);
+       if (win->_attr[j] & BRIGHT_INVERSE) 
+          standout();
+       else
+          standend();
        if (win->_text[j])
          str[0] = win->_text[j];
        else
@@ -355,6 +402,16 @@ void touchwin(WINDOW *win)
 
 void wtouchln(WINDOW *win, int y, int n, int changed)
 {
+}
+
+void wstandout(WINDOW *win)
+{
+  standout();
+}
+
+void wstandend(WINDOW *win)
+{
+  standend();
 }
 
 WINDOW *newwin(int nlines, int ncols, int begin_y, int begin_x)
@@ -417,20 +474,21 @@ WINDOW *initscr(void)
   fontbold = XLoadQueryFont(Xdp, Xfontnamebold);
   if (fontbold == (XFontStruct *)NULL) {
      fprintf(stderr, "xfractint: can't open font `%s'\n", Xfontnamebold);
-     exit(-1);
+     /* no need to exit since at this point we know Xfontname is good */
+     fontbold = XLoadQueryFont(Xdp, Xfontname);
   }
 
   ascent = font->max_bounds.ascent;
   descent = font->max_bounds.descent;
   charwidth = XTextWidth(font, "m", 1);
   charheight = ascent + descent + 2;
-  if (ctrl_window)
-    i = 0;
-  else
+  Xwcwidth = (COLS*charwidth+3)&-4;
+  Xwcheight = (LINES*charheight+2*(charheight/4)+3)&-4;
+
+  if (!ctrl_window || unixDisk) {
     i = 2*textmargin;
-  Xwcwidth = i + ((COLS*charwidth+3)&-4);
-  Xwcheight = i + ((LINES*charheight+2*(charheight/4)+3)&-4);
-  if (!ctrl_window) {
+    Xwcwidth += i;
+    Xwcheight += i;
     if (Xgeometry) {
       XParseGeometry(Xgeometry, &Xwinx, &Xwiny, (unsigned int *) &Xwinwidth,
 		     (unsigned int *) &Xwinheight);
@@ -478,6 +536,7 @@ WINDOW *initscr(void)
   clear();
   if (ctrl_window)
      XMapRaised(Xdp, Xwc);
+  standend();
   return NULL;
 }
 
@@ -520,6 +579,8 @@ void xpopup(char *str) {
   char *ptr1, *ptr2;
   int x, y, j, n;
   unsigned int junk;
+
+  if (!Xwc) return;
 
   /* if str==NULL refresh message */
   if (!str && Xwp && Xmessage) {

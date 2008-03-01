@@ -16,13 +16,21 @@ OPT = -O2
 NCURSES =
 # NCURSES = -DNCURSES
 
+ifndef PREFIX
+PREFIX = /usr
+endif
+ifndef DESTDIR
+DESTDIR = $(PREFIX)
+endif
+
 # SRCDIR should be a path to the directory that will hold fractint.hlp
 # SRCDIR should also hold the .par, .frm, etc. files
-SRCDIR = /usr/share/xfractint
+SRCDIR = $(DESTDIR)/share/xfractint
+SHRDIR = $(PREFIX)/share/xfractint
 # BINDIR is where you put your X11 binaries
-BINDIR = /usr/X11R6/bin
+BINDIR = $(DESTDIR)/bin
 # MANDIR is where you put your chapter 1 man pages
-MANDIR = /usr/share/man/man1
+MANDIR = $(DESTDIR)/share/man/man1
 
 HFD = ./headers
 UDIR = ./unix
@@ -105,15 +113,17 @@ AFLAGS = -f elf -w+orphan-labels
 
 ifeq ($(AS),/usr/bin/nasm)
 
+CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -DNASM -fno-builtin
 #CFLAGS = -I. -D_CONST $(DEFINES)
-CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
-         -march=$(ARCH) -DNASM -fno-builtin
+#CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
+#         -march=$(ARCH) -DNASM -fno-builtin
 #CFLAGS = -I. $(DEFINES) -g -DBIG_ANSI_C -DLINUX -Os -DNASM -fno-builtin
 
 else
 
-CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
-         -march=$(ARCH) -fno-builtin
+CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -fno-builtin
+#CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
+#         -march=$(ARCH) -fno-builtin
 #CFLAGS = -I. $(DEFINES) -g -DBIG_ANSI_C -DLINUX -Os -fno-builtin
 
 endif
@@ -180,6 +190,7 @@ xfcurses.h
 DOCS = debugfla.txt fractsrc.txt hc.txt
 
 HELPFILES = help.src help2.src help3.src help4.src help5.src
+LISTHELPFILE = $(DOSHELPDIR)/$(HELPFILES)
 
 SRCFILES = $(COMDIR)/$(OLDSRC) $(UDIR)/$(NEWSRC) $(DOSHELPDIR)/$(HELPFILES) \
 $(HFD)/$(HEADERS) $(DOCS)
@@ -260,15 +271,24 @@ HOBJS = $(DOSHELPDIR)/hc.o unix.o
 .SUFFIXES:
 .SUFFIXES: .o .c .s .h .asm
 
-xfractint: fractint.hlp .WAIT
+xfractint: fractint.hlp
 	if [ -f $(DOSHELPDIR)/helpdefs.h ] ; then mv -f $(DOSHELPDIR)/helpdefs.h $(HFD) ; fi
-	cd common ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS} ${OPT}" "SRCDIR=${SRCDIR}" \
+	cd common ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS} ${OPT}" "SRCDIR=${SHRDIR}" \
 	          "HFD=.${HFD}"
-	cd unix ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS} ${OPT}" "SRCDIR=${SRCDIR}" \
+	cd unix ; ${MAKE} all "CFLAGS= -I.${HFD} ${CFLAGS} ${OPT}" "SRCDIR=${SHRDIR}" \
 	          "AS=${AS}" "AFLAGS=${AFLAGS}" "HFD=.${HFD}"
 	$(CC) -o xfractint $(CFLAGS) $(OPT) $(OBJS) $(U_OBJS) $(LIBS)
 #	strip xfractint
 
+fractint:
+	if [ -x xfractint ] ; then mv -f xfractint xfractint.x11 ; fi
+	rm -f common/encoder.o common/help.o common/realdos.o
+	rm -f unix/unixscr.o unix/video.o unix/xfcurses.o
+	make NCURSES=-DNCURSES ; mv xfractint fractint
+	rm -f common/encoder.o common/help.o common/realdos.o
+	rm -f unix/unixscr.o unix/video.o unix/xfcurses.o	
+	if [ -x xfractint.x11 ] ; then mv -f xfractint.x11 xfractint ; fi
+	
 tar:	$(FILES)
 	tar cfh xfractint.tar $(FILES)
 
@@ -278,7 +298,8 @@ tidy:
 	cd unix ; ${MAKE} tidy
 
 clean:
-	rm -f $(HOBJS) fractint.doc fractint.hlp hc xfractint
+	rm -f build-stamp *~ */*~ core
+	rm -f $(HOBJS) fractint.doc fractint.hlp hc fractint xfractint
 	rm -f $(HFD)/helpdefs.h
 	cd $(COMDIR) ; ${MAKE} clean
 	cd $(UDIR) ; ${MAKE} clean
@@ -287,6 +308,8 @@ install: xfractint fractint.hlp
 	strip xfractint
 # only next 6 lines might need su
 	sudo cp xfractint $(BINDIR)/xfractint;
+# install fractint if built	
+	if [ -x fractint ] ; then sudo install -c -s fractint $(BINDIR) ; fi
 	sudo chmod a+x $(BINDIR)/xfractint;
 	sudo cp $(UDIR)/xfractint.man $(MANDIR)/xfractint.1;
 	sudo chmod a+r $(MANDIR)/xfractint.1
@@ -333,18 +356,16 @@ uninstall:
 fractint.hlp: hc $(DOSHELPDIR)/$(HELP)
 	cd $(DOSHELPDIR); ../hc /c; mv fractint.hlp ..
 
-.WAIT:
-
 fractint.doc: doc
 
-doc: hc $(DOSHELPDIR)/$(HELPFILES)
-	./hc /p
+doc: hc $(LISTHELPFILES)
+	cd $(DOSHELPDIR) ; ../hc /p ; mv -f fractint.doc ..
 
 hc:	$(HOBJS)
 	$(CC) -o hc $(CFLAGS) $(HOBJS)
 
 unix.o: $(UDIR)/unix.c
-	$(CC) $(CFLAGS) $(OPT) -DSRCDIR=\"$(SRCDIR)\" -c $(UDIR)/unix.c
+	$(CC) $(CFLAGS) $(OPT) -DSRCDIR=\"$(SHRDIR)\" -c $(UDIR)/unix.c
 
 copy: $(FILES)
 	mv $(FILES) backup

@@ -70,7 +70,7 @@ Loads parameters from the specified file.
 Reads a named group of parameters from the specified file.
 .TP 
 \-psviewer
-Allows the user to change the default postscript viewer.  The viewer is called when the user prints and image with cntl\-p. The default viewer is gv.
+Allows the user to change the default postscript viewer.  The viewer is called when the user prints an image with ctrl\-p. The default viewer is gv.
 .TP 
 \-ctrlwindow
 Allows the user to have a separate control window similar to the ncurses interface.
