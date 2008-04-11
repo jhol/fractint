@@ -473,7 +473,7 @@ WINDOW *initscr(void)
   }
   fontbold = XLoadQueryFont(Xdp, Xfontnamebold);
   if (fontbold == (XFontStruct *)NULL) {
-     fprintf(stderr, "xfractint: can't open font `%s'\n", Xfontnamebold);
+     fprintf(stderr, "xfractint: can't open font `%s', using `%s'\n", Xfontnamebold, Xfontname);
      /* no need to exit since at this point we know Xfontname is good */
      fontbold = XLoadQueryFont(Xdp, Xfontname);
   }

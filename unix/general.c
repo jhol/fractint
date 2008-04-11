@@ -179,7 +179,6 @@ keypressed(void) {
     } else if (ch==TAB && tabmode) {
 	keybuffer = 0;
 	tab_display();
-	ungetakey(ENTER);
 	return 0;
     }
     return ch;

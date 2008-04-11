@@ -917,14 +917,6 @@ int help(int action)
    unstackscreen();
    lookatmouse = oldlookatmouse;
    helpmode = oldhelpmode;
-#ifdef XFRACT
-   while (keypressed())
-       getakey();
-   ungetakey(ENTER);
-#ifndef NCURSES
-   refresh(0,0);
-#endif
-#endif      
    timer_start += clock_ticks();
 
    return(0);
