@@ -361,9 +361,9 @@ restorestart:
          break;
          }
 
-           name_stack_ptr = 0; /* 'r' reads first filename for browsing */
-           strcpy(file_name_stack[name_stack_ptr],browsename);
-     }
+      name_stack_ptr = 0; /* 'r' reads first filename for browsing */
+      strcpy(file_name_stack[name_stack_ptr],browsename);
+      }
 
       evolving = viewwindow = 0;
       showfile = 0;
