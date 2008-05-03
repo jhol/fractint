@@ -299,11 +299,13 @@ Fixed a bug in the virtual video code where the screen width was being
   patch 5, and is needed because other passes= options are hard coded to
   use arrays of this size.
 
-  Jean-Pierre Demailly provided changes to eliminate the use of ncurses with
-  Xfractint.
+Xfractint changes:\
+  Jean-Pierre Demailly provided extensive changes to eliminate the use of
+  ncurses with Xfractint.
 
   Included a patch from Andrew Church and the people at Gentoo that fixes a
-  filename buffer overflow.
+  filename buffer overflow that affected the help compiler.  Also included
+  their xioerror patch.
 
   Fixed a seg fault in Xfractint caused by not unstacking all the screens before
   exiting.
