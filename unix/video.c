@@ -490,7 +490,9 @@ spindac (dir, inc)
   int len;
   if (colors < 16)
     return;
-  if (istruecolor && truemode)
+  if (!(gotrealdac || fake_lut))
+    return;
+  if (istruecolor)
     return;
   if (dir != 0 && rotate_lo < colors && rotate_lo < rotate_hi)
     {

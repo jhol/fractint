@@ -2454,6 +2454,7 @@ Pre-rotation Z axis is coming at you out of the screen!"};
          return(0);              /* no - prompts are already handled */
      }
 #endif
+stackscreen();
 restart_1:
         if (Targa_Out && overlay3d)
                 Targa_Overlay = 1;
@@ -2513,6 +2514,7 @@ restart_1:
    k = fullscreen_prompt(hdg,k+1,prompts3d,uvalues,0,NULL);
    helpmode = oldhelpmode;
    if (k < 0) {
+      unstackscreen();
       return(-1);
       }
 
@@ -2731,6 +2733,7 @@ the online documentation."};
    if ((Targa_Out || ILLUMINE || RAY))
         if(get_light_params())
             goto restart_3;
+unstackscreen();
 return(0);
 }
 

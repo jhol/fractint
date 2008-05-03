@@ -332,10 +332,7 @@ UnixInit()
 
 #ifdef NCURSES
     if (standout()) {
-	text_type = 1;
 	standend();
-    } else {
-	text_type = 1;
     }
 #endif
 
@@ -2026,16 +2023,10 @@ xhandleevents()
 			xbufkey = shift_mode ? SF10: F10;
 			return;
 		    case '+':
-		        if (Xdepth>=12) 
-			  xbufkey = 0;
-                        else
-			  xbufkey = ctl_mode ? CTL_PLUS : '+';
+			xbufkey = ctl_mode ? CTL_PLUS : '+';
 			return;
 		    case '-':
-		        if (Xdepth>=12) 
-			  xbufkey = 0;
-                        else
-			  xbufkey = ctl_mode ? CTL_MINUS : '-';
+			xbufkey = ctl_mode ? CTL_MINUS : '-';
 			return;
 			break;
 #if 1
