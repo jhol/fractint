@@ -1642,6 +1642,11 @@ int evolver_menu_switch(int *kbdchar, int *frommandel, int *kbdmore, char *stack
       }
       showfile = -1;
       return(RESTORESTART);
+   case 'u':
+      stackscreen();/* save graphics image */
+      intro();
+      unstackscreen();
+      break;
    case ENTER:                  /* Enter                        */
    case ENTER_2:                /* Numeric-Keypad Enter         */
 #ifdef XFRACT

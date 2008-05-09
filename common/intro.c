@@ -85,31 +85,31 @@ void intro(void)
    movecursor(25,80); /* turn it off */
    helpmode = HELPMENU;
 
-loop_intro:
 #ifdef XFRACT
    if (slowdisplay) delaymax *= 15;
 #endif
+loop_intro:
    for (j = 0; j < delaymax && !(keypressed()); j++)
       delay(100);
-   if (menu_checkkey(keypressed(),0))
-      goto intro_end;
    if (j = keypressed()) /* set j to returned key */
       getakey();
+   if (menu_checkkey(j,0) || j == 109) /* menu key or 'm' */
+      goto intro_end;
    if (j == 32) { /* spacebar pauses */
 wait_again:
 #ifndef XFRACT
-      while (!keypressed()) ;	    
+      while (!keypressed()) ;
 #else
       waitkeypressed(0);
 #endif
-      if (menu_checkkey(keypressed(),0))
+      if (j = keypressed()) /* set j to returned key */
+         getakey();
+      if (menu_checkkey(j,0) || j == 109) /* menu key or 'm' */
          goto intro_end;
-      getakey();
-      if (j!= 32)
+      if (j!= 32) /* spacebar */
          goto wait_again;
    }
 
-   delaymax = 15;
    scrollup(toprow, botrow);
    i++;
    if (credits[authors[i]] == 0)
@@ -119,17 +119,11 @@ wait_again:
    putstring(botrow,0,C_CONTRIB,&credits[authors[i]]);
    credits[authors[i+1]] = oldchar;
    movecursor(25,80); /* turn it off */
-   if (!(j = keypressed()))
-      goto loop_intro;
-   getakey();
-   if (j != ESC)
-      goto loop_intro;
+   goto loop_intro;
 
 intro_end:
+   ungetakey(j);
    lookatmouse = oldlookatmouse;                /* restore the mouse-checking */
    helpmode = oldhelpmode;
-#ifdef XFRACT
-   putprompt();
-#endif
    return ;
    }
