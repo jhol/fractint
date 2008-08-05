@@ -171,7 +171,7 @@ MOREPARAMS moreparams[] =
     {FORMULA  ,{ p3real,p3imag,p4real,p4imag,p5real,p5imag},{0,0,0,0,0,0}},
     {FFORMULA ,{ p3real,p3imag,p4real,p4imag,p5real,p5imag},{0,0,0,0,0,0}},
     {ANT              ,{ "+Wrap?",s_randomseed,ES,ES,ES,ES},{1,0,0,0,0,0}},
-    {MANDELBROTMIX4   ,{ p3real,p3imag,        ES,ES,ES,ES},{0,0,0,0,0,0}},
+/*  {MANDELBROTMIX4   ,{ p3real,p3imag,        ES,ES,ES,ES},{0,0,0,0,0,0}}, */
     {-1               ,{ NULL,NULL,NULL,NULL,NULL,NULL    },{0,0,0,0,0,0}}
 };
 
@@ -196,6 +196,8 @@ NOTE: The default precision for bf_math=BIGNUM is not high enough
 */
    {FPJULIAZPOWER,2,JuliaZpowerbfFractal,juliabf_per_pixel, MandelbfSetup  },
    {FPMANDELZPOWER,2,JuliaZpowerbfFractal,mandelbf_per_pixel, MandelbfSetup},
+/*   {DIVIDEBROT5,1,DivideBrot5bnFractal,dividebrot5bn_per_pixel, MandelbnSetup}, */
+   {DIVIDEBROT5,2,DivideBrot5bfFractal,dividebrot5bf_per_pixel, MandelbfSetup},
    {-1,            0,NULL,                NULL,               NULL         }
 };
 
@@ -2304,6 +2306,18 @@ struct fractalspecificstuff far fractalspecific[]=
       STDBAILOUT
    },
 #endif
+/* From Jim Muth */
+   {
+   "dividebrot5",
+      {A, B, ES, ES},
+      {2, 0, 0, 0},
+      HT_DIVIDEBROT5, HF_DIVIDEBROT5, WINFRAC+BAILTEST+BF_MATH,
+      (float)-2.5, (float)1.5, (float)-1.5, (float)1.5,
+      0, NOFRACTAL, NOFRACTAL, NOFRACTAL, NOSYM,
+      DivideBrot5fpFractal, DivideBrot5fp_per_pixel, DivideBrot5Setup, StandardFractal,
+      1000000
+   },
+
    {
       NULL,            /* marks the END of the list */
       {NULL, NULL, NULL, NULL},
