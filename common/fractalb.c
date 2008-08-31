@@ -379,14 +379,14 @@ int near bnMANRbailout()
 
 int near bfMODbailout()
 {
-   long longmagnitude;
+   LDBL doublemagnitude;
 
    square_bf(bftmpsqrx, bfnew.x);
    square_bf(bftmpsqry, bfnew.y);
    add_bf(bftmp, bftmpsqrx, bftmpsqry);
 
-   longmagnitude = bftoint(bftmp);
-   if (longmagnitude >= (long)rqlim)
+   doublemagnitude = bftofloat(bftmp);
+   if (doublemagnitude >= rqlim)
       return 1;
    copy_bf(bfold.x, bfnew.x);
    copy_bf(bfold.y, bfnew.y);
@@ -395,12 +395,12 @@ int near bfMODbailout()
 
 int near bfREALbailout()
 {
-   long longtempsqrx;
+   LDBL doubletempsqrx;
 
    square_bf(bftmpsqrx, bfnew.x);
    square_bf(bftmpsqry, bfnew.y);
-   longtempsqrx = bftoint(bftmpsqrx);
-   if (longtempsqrx >= (long)rqlim)
+   doubletempsqrx = bftofloat(bftmpsqrx);
+   if (doubletempsqrx >= rqlim)
       return 1;
    copy_bf(bfold.x, bfnew.x);
    copy_bf(bfold.y, bfnew.y);
@@ -410,12 +410,12 @@ int near bfREALbailout()
 
 int near bfIMAGbailout()
 {
-   long longtempsqry;
+   LDBL doubletempsqry;
 
    square_bf(bftmpsqrx, bfnew.x);
    square_bf(bftmpsqry, bfnew.y);
-   longtempsqry = bftoint(bftmpsqry);
-   if (longtempsqry >= (long)rqlim)
+   doubletempsqry = bftofloat(bftmpsqry);
+   if (doubletempsqry >= rqlim)
       return 1;
    copy_bf(bfold.x, bfnew.x);
    copy_bf(bfold.y, bfnew.y);
@@ -424,13 +424,13 @@ int near bfIMAGbailout()
 
 int near bfORbailout()
 {
-   long longtempsqrx, longtempsqry;
+   LDBL doubletempsqrx, doubletempsqry;
 
    square_bf(bftmpsqrx, bfnew.x);
    square_bf(bftmpsqry, bfnew.y);
-   longtempsqrx = bftoint(bftmpsqrx);
-   longtempsqry = bftoint(bftmpsqry);
-   if(longtempsqrx >= (long)rqlim || longtempsqry >= (long)rqlim)
+   doubletempsqrx = bftofloat(bftmpsqrx);
+   doubletempsqry = bftofloat(bftmpsqry);
+   if(doubletempsqrx >= rqlim || doubletempsqry >= rqlim)
       return 1;
    copy_bf(bfold.x, bfnew.x);
    copy_bf(bfold.y, bfnew.y);
@@ -439,13 +439,13 @@ int near bfORbailout()
 
 int near bfANDbailout()
 {
-   long longtempsqrx, longtempsqry;
+   LDBL doubletempsqrx, doubletempsqry;
 
    square_bf(bftmpsqrx, bfnew.x);
    square_bf(bftmpsqry, bfnew.y);
-   longtempsqrx = bftoint(bftmpsqrx);
-   longtempsqry = bftoint(bftmpsqry);
-   if(longtempsqrx >= (long)rqlim && longtempsqry >= (long)rqlim)
+   doubletempsqrx = bftofloat(bftmpsqrx);
+   doubletempsqry = bftofloat(bftmpsqry);
+   if(doubletempsqrx >= rqlim && doubletempsqry >= rqlim)
       return 1;
    copy_bf(bfold.x, bfnew.x);
    copy_bf(bfold.y, bfnew.y);
@@ -454,7 +454,7 @@ int near bfANDbailout()
 
 int near bfMANHbailout()
 {
-   long longtempmag;
+   LDBL doubletempmag;
 
    square_bf(bftmpsqrx, bfnew.x);
    square_bf(bftmpsqry, bfnew.y);
@@ -463,8 +463,8 @@ int near bfMANHbailout()
    abs_bf(bfold.y,bfnew.y);
    add_bf(bftmp, bfold.x, bfold.y);
    square_bf(bfold.x, bftmp);
-   longtempmag = bftoint(bfold.x);
-   if(longtempmag >= (long)rqlim)
+   doubletempmag = bftofloat(bfold.x);
+   if(doubletempmag >= rqlim)
       return 1;
    copy_bf(bfold.x, bfnew.x);
    copy_bf(bfold.y, bfnew.y);
@@ -473,15 +473,15 @@ int near bfMANHbailout()
 
 int near bfMANRbailout()
 {
-   long longtempmag;
+   LDBL doubletempmag;
 
    square_bf(bftmpsqrx, bfnew.x);
    square_bf(bftmpsqry, bfnew.y);
    add_bf(bftmp, bfnew.x, bfnew.y); /* don't need abs since we square it next */
    /* note: in next two lines, bfold is just used as a temporary variable */
    square_bf(bfold.x, bftmp);
-   longtempmag = bftoint(bfold.x);
-   if(longtempmag >= (long)rqlim)
+   doubletempmag = bftofloat(bfold.x);
+   if(doubletempmag >= rqlim)
       return 1;
    copy_bf(bfold.x, bfnew.x);
    copy_bf(bfold.y, bfnew.y);
@@ -565,6 +565,7 @@ int MandelbnSetup()
             symmetry = NOSYM;
          break;
       case DIVIDEBROT5:
+         init_big_pi();
          c_exp = -((int)param[0] - 2); /* use negative here so only need it once */
          b_const = param[1] + 0.00000000000000000001;
          break;
@@ -646,6 +647,7 @@ int MandelbfSetup()
             symmetry = NOSYM;
          break;
       case DIVIDEBROT5:
+         init_big_pi();
          c_exp = -((int)param[0] - 2); /* use negative here so only need it once */
          b_const = param[1] + 0.00000000000000000001;
          break;
@@ -741,12 +743,13 @@ int mandelbf_per_pixel()
    }
 
    /* square has side effect - must copy first */
-   copy_bf(bfnew.x, bfold.x);
-   copy_bf(bfnew.y, bfold.y);
+   /* not true, square saves a copy before call to unsafe_square */
+   /* copy_bf(bfnew.x, bfold.x); */
+   /* copy_bf(bfnew.y, bfold.y); */
 
    /* Square these to rbflength bytes of precision */
-   square_bf(bftmpsqrx, bfnew.x);
-   square_bf(bftmpsqry, bfnew.y);
+   square_bf(bftmpsqrx, bfold.x);
+   square_bf(bftmpsqry, bfold.y);
 
    return (1);                  /* 1st iteration has been done */
 }
@@ -797,12 +800,13 @@ juliabf_per_pixel()
    sub_bf(bfold.y, bfymax, bfnew.x);
 
    /* square has side effect - must copy first */
-   copy_bf(bfnew.x, bfold.x);
-   copy_bf(bfnew.y, bfold.y);
+   /* not true, square saves a copy before call to unsafe_square */
+   /* copy_bf(bfnew.x, bfold.x); */
+   /* copy_bf(bfnew.y, bfold.y); */
 
    /* Square these to rbflength bytes of precision */
-   square_bf(bftmpsqrx, bfnew.x);
-   square_bf(bftmpsqry, bfnew.y);
+   square_bf(bftmpsqrx, bfold.x);
+   square_bf(bftmpsqry, bfold.y);
 
    return (1);                  /* 1st iteration has been done */
 }
@@ -827,10 +831,8 @@ int dividebrot5bn_per_pixel()
    clear_bn(bntmpsqry);
    clear_bn(bnold.x);
    clear_bn(bnold.y);
-   clear_bn(bnnew.x);
-   clear_bn(bnnew.y);
 
-   return (0);                  /* 1st iteration has been not done */
+   return (0);                  /* 1st iteration has NOT been done */
 }
 
 int dividebrot5bf_per_pixel()
@@ -853,10 +855,8 @@ int dividebrot5bf_per_pixel()
    clear_bf(bftmpsqry);
    clear_bf(bfold.x);
    clear_bf(bfold.y);
-   clear_bf(bfnew.x);
-   clear_bf(bfnew.y);
 
-   return (0);                  /* 1st iteration has been not done */
+   return (0);                  /* 1st iteration has NOT been done */
 }
 
 int
@@ -933,40 +933,47 @@ JuliaZpowerbfFractal()
 int
 DivideBrot5bnFractal()
 {
-   _BNCMPLX bntmpnew, bntmpx2, bnc_exp;
+   _BNCMPLX bntmpnew, bnnumer, bnc_exp;
+   bn_t tmp1;
    int saved; saved = save_stack();
 
-   bntmpnew.x = alloc_stack(bnlength);
-   bntmpnew.y = alloc_stack(bnlength);
-   bntmpx2.x = alloc_stack(bnlength);
-   bntmpx2.y = alloc_stack(bnlength);
-   bnc_exp.x = alloc_stack(bnlength);
-   bnc_exp.y = alloc_stack(bnlength);
+   bntmpnew.x = alloc_stack(rlength);
+   bntmpnew.y = alloc_stack(rlength);
+   bnnumer.x  = alloc_stack(rlength);
+   bnnumer.y  = alloc_stack(rlength);
+   bnc_exp.x  = alloc_stack(bnlength);
+   bnc_exp.y  = alloc_stack(bnlength);
+   tmp1       = alloc_stack(rlength);
 
    /* bntmpsqrx and bntmpsqry were previously squared before getting to */
    /* this function, so they must be shifted.                           */
-   /* bntmpx2.x = bntmpsqrx - bntmpsqry;   */
-   sub_bn(bntmpx2.x, bntmpsqrx+shiftfactor, bntmpsqry+shiftfactor);
 
-   /* bntmpx2.y = 2 * bnold.x * bnold.y; */
-   mult_bn(bntmpx2.y, bnold.x, bnold.y);
-   double_a_bn(bntmpx2.y+shiftfactor);
+   /* sqr(z) */
+   /* bnnumer.x = bntmpsqrx - bntmpsqry;   */
+   sub_bn(bnnumer.x, bntmpsqrx+shiftfactor, bntmpsqry+shiftfactor);
+
+   /* bnnumer.y = 2 * bnold.x * bnold.y; */
+   mult_bn(bnnumer.y, bnold.x, bnold.y);
+   double_a_bn(bnnumer.y+shiftfactor);
+   /* need to shiftfactor bnnumer.y */
+   *bnnumer.y =+ shiftfactor;
 
    /* z^(a) */
    inttobn(bnc_exp.x, c_exp);
    clear_bn(bnc_exp.y);
    ComplexPower_bn(&bntmpnew, &bnold, &bnc_exp);
    /* then add b */
-   floattobn(bntmp, b_const);
-   add_bn(bntmpnew.x, bntmp, bntmpnew.x+shiftfactor);
+   floattobn(tmp1, b_const);
+   add_bn(bntmpnew.x, tmp1, bntmpnew.x+shiftfactor);
+   /* need to shiftfactor bntmpnew.y */
+   *bntmpnew.y =+ shiftfactor;
 
-/* also need to shift bntmpnew.y, above ???? */
 
    /* sqr(z)/(z^(a)+b) */
-   cplxdiv_bn(&bnnew, &bntmpx2, &bntmpnew);
+   cplxdiv_bn(&bnnew, &bnnumer, &bntmpnew);
 
-   add_bn(bnnew.x, bnnew.x+shiftfactor, bnparm.x);
-   add_bn(bnnew.y, bnnew.y+shiftfactor, bnparm.y);
+   add_bn(bnnew.x, bnnew.x, bnparm.x);
+   add_bn(bnnew.y, bnnew.y, bnparm.y);
 
    restore_stack(saved);
    return bignumbailout();
@@ -976,19 +983,22 @@ int
 DivideBrot5bfFractal()
 {
    _BFCMPLX bftmpnew, bfnumer, bfc_exp;
+   bf_t tmp1;
    int saved; saved = save_stack();
 
    bftmpnew.x = alloc_stack(rbflength+2);
    bftmpnew.y = alloc_stack(rbflength+2);
-   bfnumer.x = alloc_stack(rbflength+2);
-   bfnumer.y = alloc_stack(rbflength+2);
-   bfc_exp.x = alloc_stack(rbflength+2);
-   bfc_exp.y = alloc_stack(rbflength+2);
+   bfnumer.x  = alloc_stack(rbflength+2);
+   bfnumer.y  = alloc_stack(rbflength+2);
+   bfc_exp.x  = alloc_stack(bflength+2);
+   bfc_exp.y  = alloc_stack(bflength+2);
+   tmp1       = alloc_stack(rbflength+2);
 
-   /* bftmpx2.x = bftmpsqrx - bftmpsqry;   */
+   /* sqr(z) */
+   /* bfnumer.x = bftmpsqrx - bftmpsqry;   */
    sub_bf(bfnumer.x, bftmpsqrx, bftmpsqry);
 
-   /* bftmpx2.y = 2 * bfold.x * bfold.y; */
+   /* bfnumer.y = 2 * bfold.x * bfold.y; */
    mult_bf(bfnumer.y, bfold.x, bfold.y);
    double_a_bf(bfnumer.y);
 
@@ -997,8 +1007,8 @@ DivideBrot5bfFractal()
    clear_bf(bfc_exp.y);
    ComplexPower_bf(&bftmpnew, &bfold, &bfc_exp);
    /* then add b */
-   floattobf(bftmp, b_const);
-   add_bf(bftmpnew.x, bftmp, bftmpnew.x);
+   floattobf(tmp1, b_const);
+   add_a_bf(bftmpnew.x, tmp1);
 
    /* sqr(z)/(z^(a)+b) */
    cplxdiv_bf(&bfnew, &bfnumer, &bftmpnew);
@@ -1178,7 +1188,8 @@ _BNCMPLX *cmplxlog_bn(_BNCMPLX *t, _BNCMPLX *s)
    square_bn(t->x,s->x);
    square_bn(t->y,s->y);
    add_a_bn(t->x+shiftfactor,t->y+shiftfactor);
-   ln_bn(t->x,t->x+shiftfactor);
+   /*   ln_bn(t->x,t->x+shiftfactor); shiftfactor not needed here */
+   ln_bn(t->x,t->x);
    half_a_bn(t->x);
    atan2_bn(t->y,s->y,s->x);
    return(t);
@@ -1200,7 +1211,6 @@ _BNCMPLX *cplxmul_bn( _BNCMPLX *t, _BNCMPLX *x, _BNCMPLX *y)
    return(t);
 }
 
-/* note: cplxdiv_bn() returns need to be +shiftfactor'ed */
 _BNCMPLX *cplxdiv_bn( _BNCMPLX *t, _BNCMPLX *x, _BNCMPLX *y)
 {
    bn_t tmp1, denom;
