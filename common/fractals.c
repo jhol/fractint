@@ -3481,7 +3481,6 @@ DivideBrot5fpFractal(void) /* from formula by Jim Muth */
    /* then add c = init = pixel */
    new.x += init.x;
    new.y += init.y;
-   old = new;
 
    return(floatbailout());
 }

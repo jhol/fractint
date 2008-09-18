@@ -697,12 +697,13 @@ int mandelbn_per_pixel()
    }
 
    /* square has side effect - must copy first */
-   copy_bn(bnnew.x, bnold.x);
-   copy_bn(bnnew.y, bnold.y);
+   /* not true, square restores the sign after the call to unsafe_square */
+   /* copy_bn(bnnew.x, bnold.x); */
+   /* copy_bn(bnnew.y, bnold.y); */
 
    /* Square these to rlength bytes of precision */
-   square_bn(bntmpsqrx, bnnew.x);
-   square_bn(bntmpsqry, bnnew.y);
+   square_bn(bntmpsqrx, bnold.x);
+   square_bn(bntmpsqry, bnold.y);
 
    return (1);                  /* 1st iteration has been done */
 }
@@ -772,12 +773,13 @@ juliabn_per_pixel()
    sub_bn(bnold.y, bnymax, bnnew.x);
 
    /* square has side effect - must copy first */
-   copy_bn(bnnew.x, bnold.x);
-   copy_bn(bnnew.y, bnold.y);
+   /* not true, square restores the sign after the call to unsafe_square */
+   /* copy_bn(bnnew.x, bnold.x); */
+   /* copy_bn(bnnew.y, bnold.y); */
 
    /* Square these to rlength bytes of precision */
-   square_bn(bntmpsqrx, bnnew.x);
-   square_bn(bntmpsqry, bnnew.y);
+   square_bn(bntmpsqrx, bnold.x);
+   square_bn(bntmpsqry, bnold.y);
 
    return (1);                  /* 1st iteration has been done */
 }
@@ -934,7 +936,7 @@ int
 DivideBrot5bnFractal()
 {
    _BNCMPLX bntmpnew, bnnumer, bnc_exp;
-   bn_t tmp1;
+   bn_t tmp1, tmp2;
    int saved; saved = save_stack();
 
    bntmpnew.x = alloc_stack(rlength);
@@ -943,7 +945,8 @@ DivideBrot5bnFractal()
    bnnumer.y  = alloc_stack(rlength);
    bnc_exp.x  = alloc_stack(bnlength);
    bnc_exp.y  = alloc_stack(bnlength);
-   tmp1       = alloc_stack(rlength);
+   tmp1       = alloc_stack(bnlength);
+   tmp2       = alloc_stack(rlength);
 
    /* bntmpsqrx and bntmpsqry were previously squared before getting to */
    /* this function, so they must be shifted.                           */
@@ -953,10 +956,9 @@ DivideBrot5bnFractal()
    sub_bn(bnnumer.x, bntmpsqrx+shiftfactor, bntmpsqry+shiftfactor);
 
    /* bnnumer.y = 2 * bnold.x * bnold.y; */
-   mult_bn(bnnumer.y, bnold.x, bnold.y);
-   double_a_bn(bnnumer.y+shiftfactor);
-   /* need to shiftfactor bnnumer.y */
-   *bnnumer.y =+ shiftfactor;
+   mult_bn(tmp2, bnold.x, bnold.y);
+   double_a_bn(tmp2+shiftfactor);
+   copy_bn(bnnumer.y, tmp2+shiftfactor);
 
    /* z^(a) */
    inttobn(bnc_exp.x, c_exp);
@@ -966,14 +968,14 @@ DivideBrot5bnFractal()
    floattobn(tmp1, b_const);
    add_bn(bntmpnew.x, tmp1, bntmpnew.x+shiftfactor);
    /* need to shiftfactor bntmpnew.y */
-   *bntmpnew.y =+ shiftfactor;
-
+   copy_bn(tmp2, bntmpnew.y+shiftfactor);
+   copy_bn(bntmpnew.y, tmp2);
 
    /* sqr(z)/(z^(a)+b) */
    cplxdiv_bn(&bnnew, &bnnumer, &bntmpnew);
 
-   add_bn(bnnew.x, bnnew.x, bnparm.x);
-   add_bn(bnnew.y, bnnew.y, bnparm.y);
+   add_a_bn(bnnew.x, bnparm.x);
+   add_a_bn(bnnew.y, bnparm.y);
 
    restore_stack(saved);
    return bignumbailout();
@@ -992,7 +994,7 @@ DivideBrot5bfFractal()
    bfnumer.y  = alloc_stack(rbflength+2);
    bfc_exp.x  = alloc_stack(bflength+2);
    bfc_exp.y  = alloc_stack(bflength+2);
-   tmp1       = alloc_stack(rbflength+2);
+   tmp1       = alloc_stack(bflength+2);
 
    /* sqr(z) */
    /* bfnumer.x = bftmpsqrx - bftmpsqry;   */
@@ -1103,12 +1105,20 @@ _CMPLX cmplxbftofloat(_BFCMPLX *s)
 
 _BFCMPLX *cmplxlog_bf(_BFCMPLX *t, _BFCMPLX *s)
 {
-   square_bf(t->x,s->x);
-   square_bf(t->y,s->y);
-   add_a_bf(t->x,t->y);
-   ln_bf(t->x,t->x);
-   half_a_bf(t->x);
-   atan2_bf(t->y,s->y,s->x);
+   if (is_bf_zero(s->x) && is_bf_zero(s->y))
+      {
+      clear_bf(t->x);
+      clear_bf(t->y);
+      }
+   else
+      {
+      square_bf(t->x,s->x);
+      square_bf(t->y,s->y);
+      add_a_bf(t->x,t->y);
+      ln_bf(t->x,t->x);
+      half_a_bf(t->x);
+      atan2_bf(t->y,s->y,s->x);
+      }
    return(t);
 }
 
@@ -1139,15 +1149,22 @@ _BFCMPLX *cplxdiv_bf( _BFCMPLX *t, _BFCMPLX *x, _BFCMPLX *y)
    square_bf(t->y, y->y);
    add_bf(denom,t->x,t->y);
 
-   mult_bf(tmp1, x->x, y->x);
-   mult_bf(t->x, x->y, y->y);
-   add_bf(t->x,tmp1,t->x);
-   div_bf(t->x, t->x, denom);
+   if (is_bf_zero(denom))
+      {
+      overflow = 1;
+      }
+   else
+      {
+      mult_bf(tmp1, x->x, y->x);
+      mult_bf(t->x, x->y, y->y);
+      add_bf(t->x,tmp1,t->x);
+      div_bf(t->x, t->x, denom);
 
-   mult_bf(tmp1, x->y, y->x);
-   mult_bf(t->y, x->x, y->y);
-   sub_bf(t->y,tmp1,t->y);
-   div_bf(t->y, t->y, denom);
+      mult_bf(tmp1, x->y, y->x);
+      mult_bf(t->y, x->x, y->y);
+      sub_bf(t->y,tmp1,t->y);
+      div_bf(t->y, t->y, denom);
+      }
 
    restore_stack(saved);
    return(t);
@@ -1185,13 +1202,20 @@ _BFCMPLX *ComplexPower_bf(_BFCMPLX *t, _BFCMPLX *xx, _BFCMPLX *yy)
 
 _BNCMPLX *cmplxlog_bn(_BNCMPLX *t, _BNCMPLX *s)
 {
-   square_bn(t->x,s->x);
-   square_bn(t->y,s->y);
-   add_a_bn(t->x+shiftfactor,t->y+shiftfactor);
-   /*   ln_bn(t->x,t->x+shiftfactor); shiftfactor not needed here */
-   ln_bn(t->x,t->x);
-   half_a_bn(t->x);
-   atan2_bn(t->y,s->y,s->x);
+   if (is_bn_zero(s->x) && is_bn_zero(s->y))
+      {
+      clear_bn(t->x);
+      clear_bn(t->y);
+      }
+   else
+      {
+      square_bn(t->x,s->x);
+      square_bn(t->y,s->y);
+      add_bn(t->x, t->x+shiftfactor,t->y+shiftfactor);
+      ln_bn(t->x,t->x);
+      half_a_bn(t->x);
+      atan2_bn(t->y,s->y,s->x);
+      }
    return(t);
 }
 
@@ -1213,24 +1237,38 @@ _BNCMPLX *cplxmul_bn( _BNCMPLX *t, _BNCMPLX *x, _BNCMPLX *y)
 
 _BNCMPLX *cplxdiv_bn( _BNCMPLX *t, _BNCMPLX *x, _BNCMPLX *y)
 {
-   bn_t tmp1, denom;
+   bn_t tmp1, tmp2, denom;
    int saved; saved = save_stack();
    tmp1 = alloc_stack(rlength);
+   tmp2 = alloc_stack(rlength);
    denom = alloc_stack(rlength);
 
-   square_bn(t->x, y->x);
-   square_bn(t->y, y->y);
-   add_bn(denom,t->x+shiftfactor,t->y+shiftfactor);
+   square_bn(tmp1, y->x);
+   square_bn(tmp2, y->y);
+   add_bn(denom,tmp1+shiftfactor,tmp2+shiftfactor);
 
-   mult_bn(tmp1, x->x, y->x);
-   mult_bn(t->x, x->y, y->y);
-   add_bn(t->x,tmp1+shiftfactor,t->x+shiftfactor);
-   div_bn(t->x, t->x, denom);
+   if (is_bn_zero(x->x) && is_bn_zero(x->y))
+      {
+      clear_bn(t->x);
+      clear_bn(t->y);
+      }
+   else
+   if (is_bn_zero(denom))
+      {
+      overflow = 1;
+      }
+   else
+      {
+      mult_bn(tmp1, x->x, y->x);
+      mult_bn(t->x, x->y, y->y);
+      add_bn(tmp2,tmp1+shiftfactor,t->x+shiftfactor);
+      div_bn(t->x, tmp2, denom);
 
-   mult_bn(tmp1, x->y, y->x);
-   mult_bn(t->y, x->x, y->y);
-   sub_bn(t->y,tmp1+shiftfactor,t->y+shiftfactor);
-   div_bn(t->y, t->y, denom);
+      mult_bn(tmp1, x->y, y->x);
+      mult_bn(t->y, x->x, y->y);
+      sub_bn(tmp2,tmp1+shiftfactor,t->y+shiftfactor);
+      div_bn(t->y, tmp2, denom);
+      }
 
    restore_stack(saved);
    return(t);
@@ -1242,9 +1280,9 @@ _BNCMPLX *ComplexPower_bn(_BNCMPLX *t, _BNCMPLX *xx, _BNCMPLX *yy)
    _BNCMPLX tmp;
    bn_t e2x, siny, cosy;
    int saved; saved = save_stack();
-   e2x  = alloc_stack(bnlength);
-   siny = alloc_stack(bnlength);
-   cosy = alloc_stack(bnlength);
+   e2x  = alloc_stack(rlength);
+   siny = alloc_stack(rlength);
+   cosy = alloc_stack(rlength);
    tmp.x = alloc_stack(rlength);
    tmp.y = alloc_stack(rlength);
 
