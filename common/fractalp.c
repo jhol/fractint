@@ -195,10 +195,11 @@ NOTE: The default precision for bf_math=BIGNUM is not high enough
       increase the precision.
 */
    {FPJULIAZPOWER,2,JuliaZpowerbfFractal,juliabf_per_pixel, MandelbfSetup  },
-//   {FPMANDELZPOWER,2,JuliaZpowerbfFractal,mandelbf_per_pixel, MandelbfSetup},
-   {FPMANDELZPOWER,1,JuliaZpowerbnFractal,mandelbn_per_pixel, MandelbnSetup},
-   {DIVIDEBROT5,1,DivideBrot5bnFractal,dividebrot5bn_per_pixel, MandelbnSetup},
+/*   {FPJULIAZPOWER,1,JuliaZpowerbnFractal,juliabn_per_pixel, MandelbnSetup  }, */
+   {FPMANDELZPOWER,2,JuliaZpowerbfFractal,mandelbf_per_pixel, MandelbfSetup},
+/*   {FPMANDELZPOWER,1,JuliaZpowerbnFractal,mandelbn_per_pixel, MandelbnSetup}, */
 /*   {DIVIDEBROT5,2,DivideBrot5bfFractal,dividebrot5bf_per_pixel, MandelbfSetup}, */
+   {DIVIDEBROT5,1,DivideBrot5bnFractal,dividebrot5bn_per_pixel, MandelbnSetup},
    {-1,            0,NULL,                NULL,               NULL         }
 };
 

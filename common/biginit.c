@@ -404,11 +404,12 @@ void init_bf_dec(int dec)
        decimals=bfdigits;   /* blindly force */
     else
        decimals = dec;
-    if(fractype == DIVIDEBROT5 || bailout > 10)    /* arbitrary value */
+    if(bailout > 10)    /* arbitrary value */
        /* using 2 doesn't gain much and requires another test */
        intlength = 4;
-    else if (fractype == FPMANDELZPOWER || fractype == FPJULIAZPOWER)
-       intlength = 2;
+    else if (fractype == FPMANDELZPOWER || fractype == FPJULIAZPOWER ||
+             fractype == DIVIDEBROT5)
+       intlength = 4; /* 2 leaves artifacts in the center of the lakes */
     /* the bailout tests need greater dynamic range */
     else if(bailoutest == Real || bailoutest == Imag || bailoutest == And ||
             bailoutest == Manr)
@@ -428,11 +429,12 @@ void init_bf_length(int bnl)
     {
     bnlength = bnl;
 
-    if(fractype == DIVIDEBROT5 || bailout > 10)    /* arbitrary value */
+    if(bailout > 10)    /* arbitrary value */
        /* using 2 doesn't gain much and requires another test */
        intlength = 4;
-    else if (fractype == FPMANDELZPOWER || fractype == FPJULIAZPOWER)
-       intlength = 2;
+    else if (fractype == FPMANDELZPOWER || fractype == FPJULIAZPOWER ||
+             fractype == DIVIDEBROT5)
+       intlength = 4; /* 2 leaves artifacts in the center of the lakes */
     /* the bailout tests need greater dynamic range */
     else if(bailoutest == Real || bailoutest == Imag || bailoutest == And ||
             bailoutest == Manr)
