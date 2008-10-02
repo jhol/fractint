@@ -287,11 +287,12 @@ Version 20.4.9 is an update of Fractint 20.0 based on the developer's
 
 Patch 9 to Version 20.4.0\
 
-Added new Fractal type DivideBrot5 by Jim Muth.  This Fractal type
-  has AP math support.  Note that image rotation is not supported by
-  the AP math routines.
+Added new Fractal type {DivideBrot5} by Jim Muth.  This Fractal type
+  has AP math support.  Note that image skewing and inversion are not
+  supported by the AP math routines. See {Arbitrary Precision and Deep Zooming}
+  for other features not supported.
 
-  Fixed several very obscure bugs in the AP math.
+  Fixed several obscure bugs in the AP math.
 
   Added MakeFile changes from Michal Januszewski (xfractint maintainer
   in Gentoo Linux) to increase distribution compatibility.

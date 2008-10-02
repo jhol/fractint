@@ -1747,11 +1747,11 @@ This is Jim Muth's fifth version of the DivideBrot formula.
 
 The formula is:
 
-DivideBrot5 \{\; Jim Muth
-z = 0, c = pixel, a = real(p1) - 2,
-b = imag(p1) + 10^(-20):
-z = sqr(z) / (z^(-a) + b) + c
-|z| < 1000000\}
+DivideBrot5 \{\; Jim Muth\
+z = 0, c = pixel, a = real(p1) - 2,\
+b = imag(p1) + 10^(-20):\
+z = sqr(z) / (z^(-a) + b) + c\
+|z| < 16\}
 ;
 ;
 ~Topic=Distance Estimator
