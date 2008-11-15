@@ -268,10 +268,10 @@ restart:   /* insert key re-starts here */
    fract_dir2 = ".";
 #endif
 
-   cmdfiles(argc,argv);         /* process the command-line */
 #ifdef XFRACT
    UnixInit();
 #endif   
+   cmdfiles(argc,argv);         /* process the command-line */
    dopause(0);                  /* pause for error msg if not batch */
    init_msg(0,"",NULL,0);  /* this causes getakey if init_msg called on runup */
    checkfreemem(1);
