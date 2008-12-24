@@ -2755,10 +2755,8 @@ int merge_pathnames(char *oldfullpath, char *newfilename, int mode)
       }
    }
 #else
-   if (!GETPATH) {
-      findpath(newfilename,temp_path);
-      strcpy(newfilename,temp_path);
-   }
+   findpath(newfilename,temp_path);
+   strcpy(newfilename,temp_path);
 #endif
    /* check existence */
    if(isadir==0 || isafile==1)

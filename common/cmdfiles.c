@@ -537,9 +537,9 @@ int cmdfiles(int argc,char **argv)
          }
       else if ((sptr = strchr(curarg,'/')) != NULL) { /* @filename/setname? */
          *sptr = 0;
+         strcpy(CommandName,sptr+1); /* merge_pathnames modifies curarg, so get CommandName first */
          if(merge_pathnames(CommandFile, &curarg[1], 0) < 0)
             init_msg(0,"",CommandFile,0);
-         strcpy(CommandName,sptr+1);
          if(find_file_item(CommandFile,CommandName,&initfile, 0)<0 || initfile==NULL)
             argerror(curarg);
          cmdfile(initfile,3);
