@@ -1554,11 +1554,11 @@ int find_file_item(char *filename,char *itemname,FILE **fileptr, int itemtype)
       while(out == 0) {
          char msg[200];
          DTA.filename[FILE_MAX_FNAME+FILE_MAX_EXT-2]=0;
-         sprintf(msg,"Searching %13s for %s      ",DTA.filename,itemname);
-         showtempmsg(msg);
          if(!(DTA.attribute & SUBDIR) &&
              strcmp(DTA.filename,".")&&
              strcmp(DTA.filename,"..")) {
+            sprintf(msg,"Searching %13s for %s      ",DTA.filename,itemname);
+            showtempmsg(msg);
 #ifndef XFRACT
             strlwr(DTA.filename);
 #endif

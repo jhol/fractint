@@ -535,7 +535,7 @@ int cmdfiles(int argc,char **argv)
          if (curarg[0])
             cmdarg(curarg,0);           /* process simple command */
          }
-      else if ((sptr = strchr(curarg,'/')) != NULL) { /* @filename/setname? */
+      else if ((sptr = strrchr(curarg,'/')) != NULL) { /* @filename/setname? */
          *sptr = 0;
          strcpy(CommandName,sptr+1); /* merge_pathnames modifies curarg, so get CommandName first */
          if(merge_pathnames(CommandFile, &curarg[1], 0) < 0)
