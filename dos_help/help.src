@@ -290,6 +290,9 @@ Patch 10 to Version 20.4.0\
 Fixed long standing bug in Xfractint that occurred when a PAR was
   involked from the command line.
 
+Increased the WinFract maximum image size to 4087x4087 pixels.  The reason
+  for the strange limit is unknown at this time.
+
 Patch 9 to Version 20.4.0\
 
 Added new Fractal type {DivideBrot5} by Jim Muth.  This Fractal type
