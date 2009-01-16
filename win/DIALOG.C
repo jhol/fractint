@@ -458,11 +458,11 @@ LPARAM lParam;
                     GetDlgItemText(hDlg, ID_ISIZEX, temp, 10);
                     xdots = atoi(temp);
                     if (xdots < 50) xdots = 50;
-                    if (xdots > 4096) xdots = 4096;
+                    if (xdots > WINMAXPIXELS) xdots = WINMAXPIXELS;
                     GetDlgItemText(hDlg, ID_ISIZEY, temp, 10);
                     ydots = atoi(temp);
                     if (ydots < 50) ydots = 50;
-                    if (ydots > 4096) ydots = 4096;
+                    if (ydots > WINMAXPIXELS) ydots = WINMAXPIXELS;
                     colors = win_temp1;
                     win_savedac();
                     /* allocate and lock a pixel array for the bitmap */
