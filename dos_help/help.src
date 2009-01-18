@@ -290,8 +290,8 @@ Patch 10 to Version 20.4.0\
 Fixed long standing bug in Xfractint that occurred when a PAR was
   involked from the command line.
 
-Increased the WinFract maximum image size to 4087x4087 pixels.  The reason
-  for the strange limit is unknown at this time.
+Increased the WinFract maximum image size to 4096x4096 pixels.  Your mileage
+may vary depending upon how much memory Windows can allocate.
 
 Patch 9 to Version 20.4.0\
 
