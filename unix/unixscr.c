@@ -842,6 +842,7 @@ initdacbox()
 {
     int i, j, k, s0, sp;
 
+    if (mapdacbox || colorpreloaded) return;    /* map= specified */
     s0 = step & 1;
     sp = step/2;
 
