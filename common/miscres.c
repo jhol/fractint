@@ -377,10 +377,11 @@ void cvtcentermagbf(bf_t Xctr, bf_t Yctr, LDBL *Magnification, double *Xmagfacto
       /* divide tmpx and tmpy by |tmpx| so that double version of atan2() can be used */
       /* atan2() only depends on the ratio, this puts it in double's range */
       signx = sign(tmpx1);
+      tmpy = tmpy1; /* otherwise tmpy could be undefined below */
       if(signx)
          tmpy = tmpy1/tmpx1 * signx;    /* tmpy = tmpy / |tmpx| */
       *Rotation = (double)(-rad_to_deg(atan2( (double)tmpy, signx ))); /* negative for image rotation */
-   
+
       /* tmpx = xxmin - xx3rd; */
       sub_bf(bftmpx, bfxmin, bfx3rd);
       tmpx2 = bftofloat(bftmpx);
