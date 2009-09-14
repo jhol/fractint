@@ -60,7 +60,7 @@ char    readname[FILE_MAX_PATH];/* name of fractal input file */
 char    tempdir[FILE_MAX_DIR] = {""}; /* name of temporary directory */
 char    workdir[FILE_MAX_DIR] = {""}; /* name of directory for misc files */
 char    orgfrmdir[FILE_MAX_DIR] = {""};/*name of directory for orgfrm files*/
-char    gifmask[13] = {""};
+char    gifmask[MAX_NAME] = {""};
 char    PrintName[FILE_MAX_PATH]={"fract001.ps"}; /* Name for print-to-file */
 char    savename[FILE_MAX_PATH]={"fract001"};  /* save files using this name */
 char    autoname[FILE_MAX_PATH]={"auto.key"}; /* record auto keystrokes here */
@@ -2938,16 +2938,19 @@ static int parse_colors(char *value)
 {
    int i,j,k;
    if (*value == '@') {
-      if(merge_pathnames(MAP_name,&value[1],3)<0)
-         init_msg(0,"",&value[1],3);
+      char temp_name[MAX_NAME];
+      strncpy(temp_name,&value[1],MAX_NAME);
+      temp_name[MAX_NAME-1] = 0;
+      if(merge_pathnames(MAP_name,temp_name,3)<0)
+         init_msg(0,"",temp_name,3);
       if ((int)strlen(value) > FILE_MAX_PATH || ValidateLuts(MAP_name) != 0)
          goto badcolor;
       if (display3d) {
         mapset = 1;
         }
       else {
-        if(merge_pathnames(colorfile,&value[1],3)<0)
-          init_msg(0,"",&value[1],3);
+        if(merge_pathnames(colorfile,temp_name,3)<0)
+          init_msg(0,"",temp_name,3);
         colorstate = 2;
         }
       }

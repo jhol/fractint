@@ -297,6 +297,8 @@ Fixed bug in the cvtcentermagbf() routine that was introduced some time
   prior to version 19.6.  This fixes the problem that was occurring when
   rotating ap math images by 90 degrees.
 
+Fixed buffer overflow in Xfractint that occurred when changing directories.
+
 Patch 9 to Version 20.4.0\
 
 Added new Fractal type {DivideBrot5} by Jim Muth.  This Fractal type

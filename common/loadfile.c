@@ -1125,7 +1125,7 @@ return (ret);
      struct coords itr;
      struct coords ibr;
      double win_size;   /* box size for drawindow() */
-     char name[13];     /* for filename */
+     char name[MAX_NAME];     /* for filename */
      int boxcount;      /* bytes of saved screen info */
      };
 
@@ -1141,7 +1141,7 @@ static void check_history( char *, char * );
 static void bfsetup_convert_to_screen( void );
 static void bftransform( bf_t, bf_t, struct dblcoords * );
 
-char browsename[13]; /* name for browse file */
+char browsename[MAX_NAME]; /* name for browse file */
 U16 browsehandle;
 U16 boxxhandle;
 U16 boxyhandle;
