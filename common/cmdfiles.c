@@ -519,7 +519,8 @@ int cmdfiles(int argc,char **argv)
             if (has_ext(curarg) == NULL)
                strcat(tempstring,".gif");
             if ((initfile = fopen(tempstring,"rb")) != NULL) {
-               fread(tempstring,6,1,initfile);
+               int dummy; /* to quiet compiler */
+               dummy = fread(tempstring,6,1,initfile);
                if ( tempstring[0] == 'G'
                  && tempstring[1] == 'I'
                  && tempstring[2] == 'F'

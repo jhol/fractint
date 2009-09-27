@@ -29,7 +29,7 @@ typedef unsigned USEGTYPE;
 #else
 typedef char * SEGTYPE;
 typedef char * USEGTYPE;
-#   define MK_FP(seg,off) (VOIDFARPTR )(seg+off)
+#   define MK_FP(seg,off) (VOIDFARPTR )((long)seg + (long)off)
 #include <sys/types.h> /* need size_t */
 #endif
 

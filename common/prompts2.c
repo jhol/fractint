@@ -2055,6 +2055,9 @@ FILE *dir_fopen(char *dir, char *filename, char *mode )
 /* converts relative path to absolute path */
 static int expand_dirname(char *dirname,char *drive)
 {
+#ifdef XFRACT
+   char *dummy; /* to quiet compiler */
+#endif
    fix_dirname(dirname);
    if (dirname[0] != SLASHC) {
       char buf[FILE_MAX_DIR+1],curdir[FILE_MAX_DIR+1];
@@ -2071,7 +2074,7 @@ static int expand_dirname(char *dirname,char *drive)
       segread(&sregs);
       intdosx(&regs, &regs, &sregs);
 #else
-      getcwd(curdir,FILE_MAX_DIR);
+      dummy = getcwd(curdir,FILE_MAX_DIR);
 #endif
       strcat(curdir,SLASH);
 #ifndef XFRACT

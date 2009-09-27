@@ -549,6 +549,7 @@ static int find_fractal_info(char *gif_file,struct fractal_info *info,
    struct evolution_info eload_info;
    struct orbits_info oload_info;
    int i, j, k = 0;
+   int dummy; /* to quiet compiler */
 
    blk_2_info->got_data = 0; /* initialize to no data */
    blk_3_info->got_data = 0; /* initialize to no data */
@@ -559,7 +560,7 @@ static int find_fractal_info(char *gif_file,struct fractal_info *info,
 
    if((fp = fopen(gif_file,"rb"))==NULL)
       return(-1);
-   fread(gifstart,13,1,fp);
+   dummy = fread(gifstart,13,1,fp);
    if (strncmp((char *)gifstart,"GIF",3) != 0) { /* not GIF, maybe old .tga? */
       fclose(fp);
       return(-1);
@@ -624,7 +625,7 @@ static int find_fractal_info(char *gif_file,struct fractal_info *info,
    memset(info,0,FRACTAL_INFO_SIZE);
    fractinf_len = FRACTAL_INFO_SIZE + (FRACTAL_INFO_SIZE+254)/255;
    fseek(fp,(long)(-1-fractinf_len),SEEK_END);
-   fread(info,1,FRACTAL_INFO_SIZE,fp);
+   dummy = fread(info,1,FRACTAL_INFO_SIZE,fp);
    if (strcmp(INFO_ID,info->info_id) == 0) {
 #ifdef XFRACT
        decode_fractal_info(info,1);
@@ -639,12 +640,12 @@ static int find_fractal_info(char *gif_file,struct fractal_info *info,
       while (offset < fractinf_len+513) { /* allow 512 garbage at eof */
          offset += 100; /* go back 100 bytes at a time */
          fseek(fp,(long)(0-offset),SEEK_END);
-         fread(tmpbuf,1,110,fp); /* read 10 extra for string compare */
+         dummy = fread(tmpbuf,1,110,fp); /* read 10 extra for string compare */
          for (i = 0; i < 100; ++i)
             if (!strcmp(INFO_ID,&tmpbuf[i])) { /* found header? */
                strcpy(info->info_id,INFO_ID);
                fseek(fp,(long)(hdr_offset=i-offset),SEEK_END);
-               fread(info,1,FRACTAL_INFO_SIZE,fp);
+               dummy = fread(info,1,FRACTAL_INFO_SIZE,fp);
 #ifdef XFRACT
                decode_fractal_info(info,1);
 #endif
