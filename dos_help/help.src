@@ -287,6 +287,9 @@ Version 20.4.10 is an update of Fractint 20.0 based on the developer's
 
 Patch 10 to Version 20.4.0\
 
+Fixed WinFract resetting palette when parameters are changed with the
+  <X>, <Y>, <Z>, or <G> screens.
+
 Fixed usage of shift and control keys in Xfractint.
 
 Added sanity checks in Xfractint parser functions.
