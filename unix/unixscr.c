@@ -1843,6 +1843,8 @@ extern int editpal_cursor;
 extern void Cursor_SetPos();
 
 int XZoomWaiting = 0;
+static int ctl_mode = 0;
+static int shift_mode = 0;
 
 #define SENS 1
 #define ABS(x) ((x) > 0?(x):-(x))
@@ -1869,13 +1871,11 @@ xhandleevents()
 {
     XEvent xevent;
     int drawn;
-    int ctl_mode, shift_mode, bnum;
+    int bnum;
     int bandx0,bandy0,bandx1,bandy1;
     static int lastx,lasty;
     static int dx,dy;
 
-    ctl_mode = 0;
-    shift_mode = 0;
     bnum = 0;
 
     if (doredraw) {

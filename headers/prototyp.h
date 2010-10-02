@@ -532,9 +532,7 @@ extern int key_count(int);
 extern int main_menu_switch(int *,int *,int *,char *,int);
 extern int pot_line(BYTE *,int );
 extern int sound_line(BYTE *,int );
-#ifndef XFRACT
-extern int _cdecl _matherr(struct exception *);
-#else
+#ifdef XFRACT
 extern int XZoomWaiting;
 #endif
 #ifndef USE_VARARGS
@@ -773,6 +771,9 @@ extern void roundfloatd(double *);
 extern void fix_inversion(double *);
 extern int ungetakey(int);
 extern void get_calculation_time(char *, long);
+#ifndef XFRACT
+extern int _cdecl _matherr(struct exception *);
+#endif
 
 /*  mpmath_c -- C file prototypes */
 

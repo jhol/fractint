@@ -14,6 +14,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
 
@@ -91,6 +92,7 @@ initasmvars(void)
 
 void fpe_handler(int signum)
 {
+    signal(SIGFPE, fpe_handler);
     overflow = 1;
 }
 

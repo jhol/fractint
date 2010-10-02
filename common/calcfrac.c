@@ -1882,7 +1882,8 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
 
    if (inside <= BOF60 && inside >= BOF61)
    {
-      magnitude = lmagnitud = 0;
+      magnitude = 0.0;
+      lmagnitud = 0;
       min_orbit = 100000.0;
    }
    overflow = 0;                /* reset integer math overflow flag */

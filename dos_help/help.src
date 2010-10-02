@@ -287,11 +287,16 @@ Version 20.4.10 is an update of Fractint 20.0 based on the developer's
 
 Patch 10 to Version 20.4.0\
 
+Fixed usage of shift and control keys in Xfractint.
+
+Added sanity checks in Xfractint parser functions.
+
 Fixed long standing bug in Xfractint that occurred when a PAR was
   involked from the command line.
 
 Increased the WinFract maximum image size to 4096x4096 pixels.  Your mileage
-  may vary depending upon how much memory Windows can allocate.
+  may vary depending upon how much memory Windows can allocate.  But remember
+  that above 2048x2048 passes=1 is forced.
 
 Fixed bug in the cvtcentermagbf() routine that was introduced some time
   prior to version 19.6.  This fixes the problem that was occurring when
