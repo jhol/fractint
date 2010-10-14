@@ -102,6 +102,7 @@ void FPUcplxlog(_CMPLX *x, _CMPLX *z)
     xy = x->y;
     if (xx == 0.0 && xy == 0.0) {
         z->x = z->y = 0.0;
+        overflow = 1;
         return;
         }
     mod = xx*xx + xy*xy;
@@ -117,13 +118,13 @@ void FPUcplxlog(_CMPLX *x, _CMPLX *z)
 
 void FPUcplxexp387(_CMPLX *x, _CMPLX *z)
 {
-    double pwr,y;
+    LDBL pwr,y;
     y = x->y;
-    pwr = exp(x->x);
+    pwr = expl(x->x);
     if (isnan(pwr) || isinf(pwr))
       pwr = 1.0;
-    z->x = pwr*cos(y);
-    z->y = pwr*sin(y);
+    z->x = (double)(pwr*cosl(y));
+    z->y = (double)(pwr*sinl(y));
 }
 
 /* Integer Routines */
