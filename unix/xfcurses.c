@@ -10,6 +10,9 @@
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#ifdef WITH_XFT
+#include <X11/Xft/Xft.h>
+#endif
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -43,11 +46,19 @@ extern int resize_flag;
 extern void error_display();
 
 static GC Xwcgc = None;
+#ifdef WITH_XFT
+static XftFont * font, * fontbold, *curfont;
+#else
 static XFontStruct * font, * fontbold;
+#define DrawString XDrawString
+#define DrawImageString XDrawImageString
+#endif
 static unsigned long black, white;
 static XSetWindowAttributes Xwatt;
 
 unsigned long pixel[48];
+unsigned long pixel_fg, pixel_bg;
+
 static char * xc[16] = {
   "#000000",    /* black */
   "#0000A8",    /* dark blue */
@@ -96,6 +107,85 @@ void Open_XDisplay()
     Xdepth = DefaultDepth(Xdp, Xdscreen);
 }
 
+#ifdef WITH_XFT
+void
+XftDrawImageString(Window win, GC gc, XftFont * font,
+                   int x, int y, FcChar8 * s, int n)
+{
+   XGlyphInfo extents = {};
+   XColor xcol;
+   XRenderColor xre_color;
+   static XftColor color;
+   static XftDraw *draw = NULL;
+   static Pixmap pixmap = None;
+   static Window win0 = None;
+   static int w0 = 0, h0 = 0, fg0 = -1;
+   int i, j, d, w, h;
+
+   if (!font || !n) return;
+
+   if (fg0 == -1 || pixel_fg != fg0) {
+       XftColorFree(Xdp, DefaultVisual(Xdp, DefaultScreen(Xdp)), Xcmap, &color);
+       xcol.pixel = pixel_fg;
+       xcol.flags = DoRed | DoGreen | DoBlue;
+       XQueryColor(Xdp, Xcmap, &xcol);
+       xre_color.red = xcol.red;
+       xre_color.green = xcol.green;
+       xre_color.blue = xcol.blue;
+       xre_color.alpha = 0xffff;
+       XftColorAllocValue(Xdp, DefaultVisual(Xdp, DefaultScreen(Xdp)),
+		          Xcmap, &xre_color, &color);
+       fg0 = pixel_fg;
+   }
+   w = font->max_advance_width;
+   h = font->ascent + font->descent;
+
+   if (h > h0 || win != win0) {
+       if (draw) XftDrawDestroy(draw);
+       if (pixmap) XFreePixmap(Xdp, pixmap);
+       draw = NULL;
+   }
+   win0 = win;
+   w0 = w;
+   h0 = h;
+
+   if (!draw) {
+       pixmap = XCreatePixmap(Xdp, win, w, h,
+                              DefaultDepth(Xdp, DefaultScreen(Xdp)));
+       draw = XftDrawCreate(Xdp, pixmap,
+		 DefaultVisual(Xdp, DefaultScreen(Xdp)),
+                 Xcmap);
+   }
+
+   i = 0;
+   while (i<n) {
+      j = i + 1;
+      /* find length of UTF8 character */
+      if ((s[i] & 0x80))
+	 while (j < n && (s[j]&0xc0) == 0x80) j++;
+      d = j - i;
+      XftTextExtentsUtf8(Xdp, font, (FcChar8*)(s+i), d,
+                      (XGlyphInfo*)&extents);
+      XSetForeground(Xdp, gc, pixel_bg);
+      XFillRectangle(Xdp, pixmap, gc, 0, 0, extents.xOff, h);
+      XftDrawStringUtf8(draw, &color, font, 0, font->ascent,
+                        (FcChar8*)(s+i), d);
+      XCopyArea(Xdp, pixmap, win, gc, 0, 0, extents.xOff, h,
+                x, y-font->ascent);
+      x += extents.xOff;
+      i = j;
+   }
+}
+
+void 
+DrawImageString(Display *dpy, Window win, GC gc, int x, int y, char *str, int n)
+{
+   XftDrawImageString(win, gc, curfont, x, y, (FcChar8 *) str, n);
+}
+
+#define DrawString DrawImageString
+
+#endif
 
 void cbreak(void)
 {
@@ -121,15 +211,23 @@ void clear(void)
 
 int standout(void)
 {
+#ifdef WITH_XFT
+  curfont = fontbold;
+#else
   if (screenctr)
      XSetFont(Xdp, Xwcgc, fontbold->fid);
+#endif
   return 1;
 }
 
 int standend(void)
 {
+#ifdef WITH_XFT
+  curfont = font;
+#else
   if (screenctr)
      XSetFont(Xdp, Xwcgc, font->fid);
+#endif
   return 1;
 }
 
@@ -161,13 +259,15 @@ void fill_rectangle(int x, int y, int n)
 void setcolor_bg(WINDOW *win, int j)
 {
   int attr = (j<0)?win->_cur_attr : win->_attr[j];
-  XSetForeground(Xdp, Xwcgc, pixel[(attr>>4) & 0xF]);
+  pixel_bg =  pixel[(attr>>4) & 0xF];
+  XSetForeground(Xdp, Xwcgc, pixel_bg);
 }
 
 void setcolor_fg(WINDOW *win, int j)
 {
   int attr = (j<0)?win->_cur_attr : win->_attr[j];
-  XSetForeground(Xdp, Xwcgc, pixel[attr & 0xF]);
+  pixel_fg = pixel[attr & 0xF];
+  XSetForeground(Xdp, Xwcgc, pixel_fg);
 }
 
 void waddch(WINDOW *win, const chtype ch)
@@ -195,10 +295,10 @@ void waddch(WINDOW *win, const chtype ch)
   *str = win->_text[j];
   if (*str) {
      setcolor_fg(win, j);
-     XDrawString(Xdp, Xwc, Xwcgc, 
-                 charx + win->_cur_x * charwidth, 
-                 chary + win->_cur_y * charheight, 
-                 str, 1);
+     DrawString(Xdp, Xwc, Xwcgc, 
+                charx + win->_cur_x * charwidth, 
+                chary + win->_cur_y * charheight, 
+                str, 1);
   }
 
   win->_cur_x += 1;
@@ -208,7 +308,8 @@ void waddch(WINDOW *win, const chtype ch)
   }
 }
 
-void waddstr(WINDOW *win, const char *str)
+//void waddstr(WINDOW *win, const char *str)
+void waddstr(WINDOW *win, char *str)
 {
   int i, j, n = strlen(str);
 
@@ -229,10 +330,10 @@ void waddstr(WINDOW *win, const char *str)
      standend();
 
   setcolor_fg(win, -1);
-  XDrawString(Xdp, Xwc, Xwcgc, 
-              charx + win->_cur_x * charwidth, 
-              chary + win->_cur_y * charheight, 
-	      str, n);
+  DrawString(Xdp, Xwc, Xwcgc, 
+             charx + win->_cur_x * charwidth, 
+             chary + win->_cur_y * charheight, 
+	     str, n);
 
   win->_cur_x += n;
   if (win->_cur_x >= win->_num_x) {
@@ -267,10 +368,10 @@ void draw_caret(WINDOW *win, int y, int x)
 		    charwidth-2, 2);
      if (*str) {
         setcolor_fg(win, j);
-        XDrawString(Xdp, Xwc, Xwcgc, 
-                    charx + win->_car_x * charwidth, 
-                    chary + win->_car_y * charheight, 
-                    str, 1);
+        DrawString(Xdp, Xwc, Xwcgc, 
+                   charx + win->_car_x * charwidth, 
+                   chary + win->_car_y * charheight, 
+                   str, 1);
      }
   }
 
@@ -387,7 +488,7 @@ void xrefresh(WINDOW *win, int line1, int line2)
          str[0] = win->_text[j];
        else
 	 str[0] = ' ';	 
-       XDrawString(Xdp, Xwc, Xwcgc, 
+       DrawString(Xdp, Xwc, Xwcgc, 
                   charx + x * charwidth, 
                   chary + y * charheight, 
                   str, 1);
@@ -450,10 +551,19 @@ WINDOW *initscr(void)
   Open_XDisplay();
   Xwcsc = ScreenOfDisplay(Xdp, Xdscreen);
 
+#ifdef WITH_XFT
+  XftInitFtLibrary();
+
+  if (Xfontname == NULL)
+     Xfontname = "Dejavu Sans Mono-11";
+  if (Xfontnamebold == NULL)
+     Xfontnamebold = "Dejavu Sans Mono-11:style=Bold";
+#else
   if (Xfontname == NULL)
      Xfontname = "9x15";
   if (Xfontnamebold == NULL)
      Xfontnamebold = "9x15bold";
+#endif
 
   Xwatt.background_pixel = BlackPixelOfScreen(Xwcsc);
   Xwatt.bit_gravity = StaticGravity;
@@ -466,6 +576,23 @@ WINDOW *initscr(void)
 
   Xroot = DefaultRootWindow(Xdp);
 
+#ifdef WITH_XFT
+  font = XftFontOpenName(Xdp, DefaultScreen(Xdp), Xfontname);
+  if (font == (XftFont *)NULL) {
+     fprintf(stderr, "xfractint: can't open font `%s'\n", Xfontname);
+     exit(-1);
+  }
+  fontbold = XftFontOpenName(Xdp, DefaultScreen(Xdp), Xfontnamebold);
+  if (fontbold == (XftFont *)NULL) {
+     fprintf(stderr, "xfractint: can't open font `%s', using `%s'\n", Xfontnamebold, Xfontname);
+     /* no need to exit since at this point we know Xfontname is good */
+     fontbold = XftFontOpenName(Xdp, DefaultScreen(Xdp), Xfontname);
+  }
+
+  ascent = font->ascent;
+  descent = font->descent;
+  charwidth = font->max_advance_width;
+#else
   font = XLoadQueryFont(Xdp, Xfontname);
   if (font == (XFontStruct *)NULL) {
      fprintf(stderr, "xfractint: can't open font `%s'\n", Xfontname);
@@ -481,6 +608,8 @@ WINDOW *initscr(void)
   ascent = font->max_bounds.ascent;
   descent = font->max_bounds.descent;
   charwidth = XTextWidth(font, "m", 1);
+#endif
+
   charheight = ascent + descent + 2;
   Xwcwidth = (COLS*charwidth+3)&-4;
   Xwcheight = (LINES*charheight+2*(charheight/4)+3)&-4;
@@ -518,8 +647,8 @@ WINDOW *initscr(void)
 
   XStoreName(Xdp, Xwc, (ctrl_window)?"Xfractint controls":"Xfractint");
 
-  white = WhitePixelOfScreen(Xwcsc);
-  black = BlackPixelOfScreen(Xwcsc);
+  pixel_fg = white = WhitePixelOfScreen(Xwcsc);
+  pixel_bg = black = BlackPixelOfScreen(Xwcsc);
 
   Xcmap = DefaultColormapOfScreen(Xwcsc);
 
@@ -529,10 +658,14 @@ WINDOW *initscr(void)
   else
      pixel[i] = (i<=6)? black:white;
 
-  Xgcvals.font = font->fid;
   Xgcvals.foreground = white;
   Xgcvals.background = black;
+#ifdef WITH_XFT
+  Xwcgc = XCreateGC(Xdp, Xwc, GCForeground | GCBackground, &Xgcvals);
+#else
+  Xgcvals.font = font->fid;
   Xwcgc = XCreateGC(Xdp, Xwc, GCForeground | GCBackground | GCFont, &Xgcvals);
+#endif
   clear();
   if (ctrl_window)
      XMapRaised(Xdp, Xwc);
@@ -591,9 +724,9 @@ void xpopup(char *str) {
   iter:
     if ((ptr2=strchr(ptr1, '\n')))
       *ptr2 = '\0';
-    XDrawImageString(Xdp, Xwp, Xwcgc, 
-	             charwidth/2, ascent + (charheight/4)+2+n*charheight,
-		     ptr1, strlen(ptr1));
+    DrawImageString(Xdp, Xwp, Xwcgc, 
+	            charwidth/2, ascent + (charheight/4)+2+n*charheight,
+	            ptr1, strlen(ptr1));
     XFlush(Xdp);
     usleep(100000);
     if (ptr2) {
