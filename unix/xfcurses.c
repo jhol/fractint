@@ -28,7 +28,6 @@
 
 #include <fcntl.h>
 
-#include "xfcurses.h"
 #include "helpdefs.h"
 #include "port.h"
 #include "prototyp.h"
@@ -96,7 +95,7 @@ char * Xfontnamebold = NULL;
 void Open_XDisplay()
 {
     if (Xdp != NULL) return;
-  
+
     Xdp = XOpenDisplay(Xdisplay);
 
     if (Xdp == NULL) {
@@ -177,7 +176,7 @@ XftDrawImageString(Window win, GC gc, XftFont * font,
    }
 }
 
-void 
+void
 DrawImageString(Display *dpy, Window win, GC gc, int x, int y, char *str, int n)
 {
    XftDrawImageString(win, gc, curfont, x, y, (FcChar8 *) str, n);
@@ -250,7 +249,7 @@ void fill_rectangle(int x, int y, int n)
      return;
   u = (y==0)?descent:0;
   v = (y==LINES-1)? descent+4:0;
-  XFillRectangle(Xdp, Xwc, Xwcgc, 
+  XFillRectangle(Xdp, Xwc, Xwcgc,
 	        charx + x * charwidth,
                 chary + y * charheight - ascent - u - 1,
 		charwidth * n, charheight + u + v);
@@ -279,11 +278,11 @@ void waddch(WINDOW *win, const chtype ch)
   if (win->_cur_y<0 || win->_cur_y>=win->_num_y) return;
   *str = (char) ch;
   j = win->_cur_y*win->_num_x + win->_cur_x;
-  if (ch) 
+  if (ch)
      win->_text[j] = (char) ch;
 
   win->_attr[j] = (short) win->_cur_attr;
-  
+
   if (win->_cur_attr & BRIGHT_INVERSE)
     standout();
   else
@@ -295,9 +294,9 @@ void waddch(WINDOW *win, const chtype ch)
   *str = win->_text[j];
   if (*str) {
      setcolor_fg(win, j);
-     DrawString(Xdp, Xwc, Xwcgc, 
-                charx + win->_cur_x * charwidth, 
-                chary + win->_cur_y * charheight, 
+     DrawString(Xdp, Xwc, Xwcgc,
+                charx + win->_cur_x * charwidth,
+                chary + win->_cur_y * charheight,
                 str, 1);
   }
 
@@ -308,7 +307,6 @@ void waddch(WINDOW *win, const chtype ch)
   }
 }
 
-//void waddstr(WINDOW *win, const char *str)
 void waddstr(WINDOW *win, char *str)
 {
   int i, j, n = strlen(str);
@@ -320,7 +318,7 @@ void waddstr(WINDOW *win, char *str)
      win->_text[j] = str[i];
      win->_attr[j] = (short) win->_cur_attr;
   }
-  
+
   setcolor_bg(win, -1);
   fill_rectangle(win->_cur_x, win->_cur_y, n);
 
@@ -330,9 +328,9 @@ void waddstr(WINDOW *win, char *str)
      standend();
 
   setcolor_fg(win, -1);
-  DrawString(Xdp, Xwc, Xwcgc, 
-             charx + win->_cur_x * charwidth, 
-             chary + win->_cur_y * charheight, 
+  DrawString(Xdp, Xwc, Xwcgc,
+             charx + win->_cur_x * charwidth,
+             chary + win->_cur_y * charheight,
 	     str, n);
 
   win->_cur_x += n;
@@ -340,17 +338,17 @@ void waddstr(WINDOW *win, char *str)
     win->_cur_y += win->_cur_x / win->_num_x;
     win->_cur_x = win->_cur_x % win->_num_x;
   }
-}  
+}
 
 void draw_caret(WINDOW *win, int y, int x)
 {
   int j;
   char str[4];
 
-  if (screenctr == 0) 
+  if (screenctr == 0)
      goto caret_end;
 
-  if (win->_car_x>=0 && win->_car_x<COLS && 
+  if (win->_car_x>=0 && win->_car_x<COLS &&
       win->_car_y>=0 && win->_car_y<LINES) {
      j = win->_car_y * win->_num_x + win->_car_x;
      *str = win->_text[j];
@@ -362,22 +360,22 @@ void draw_caret(WINDOW *win, int y, int x)
      setcolor_bg(win, j);
      if (win->_car_x>=0 && win->_car_x<COLS &&
          win->_car_y>=0 && win->_car_y<LINES)
-        XFillRectangle(Xdp, Xwc, Xwcgc, 
+        XFillRectangle(Xdp, Xwc, Xwcgc,
 	            charx + win->_car_x * charwidth + 2,
                     chary + win->_car_y * charheight + 2 ,
 		    charwidth-2, 2);
      if (*str) {
         setcolor_fg(win, j);
-        DrawString(Xdp, Xwc, Xwcgc, 
-                   charx + win->_car_x * charwidth, 
-                   chary + win->_car_y * charheight, 
+        DrawString(Xdp, Xwc, Xwcgc,
+                   charx + win->_car_x * charwidth,
+                   chary + win->_car_y * charheight,
                    str, 1);
      }
   }
 
   XSetForeground(Xdp, Xwcgc, pixel[4]);
   if (x>=0 && x<COLS && y>=0 && y<LINES)
-     XFillRectangle(Xdp, Xwc, Xwcgc, 
+     XFillRectangle(Xdp, Xwc, Xwcgc,
 	            charx + x * charwidth + 2,
                     chary + y * charheight + 2 ,
 		    charwidth-2, 2);
@@ -421,7 +419,7 @@ void wdeleteln(WINDOW *win)
 
 void winsertln(WINDOW *win)
 {
-  int j, k;   
+  int j, k;
   if (win->_cur_y<0 || win->_cur_y>=win->_num_y) return;
   for (j = win->_num_y - 1; j> win->_cur_y; j--) {
      k = j*win->_num_x;
@@ -454,7 +452,7 @@ void refresh(int line1, int line2)
 void xrefresh(WINDOW *win, int line1, int line2)
 {
   char str[4];
-  int x, y, j, topline;
+  int x, y, j;
 
   if (screenctr == 0 && !ctrl_window) {
     if (resize_flag & 2) {
@@ -464,8 +462,8 @@ void xrefresh(WINDOW *win, int line1, int line2)
        XPutImage(Xdp, Xw, Xgc, Ximage, 0, 0, 0, 0, Xwinwidth, Xwinheight);
     return;
   }
- 
-  if (line1 < 0) 
+
+  if (line1 < 0)
     line1 = 0;
   if (line1 >= win->_num_y)
     line1 = win->_num_y;
@@ -480,17 +478,17 @@ void xrefresh(WINDOW *win, int line1, int line2)
        setcolor_bg(win, j);
        fill_rectangle(x, y, 1);
        setcolor_fg(win, j);
-       if (win->_attr[j] & BRIGHT_INVERSE) 
+       if (win->_attr[j] & BRIGHT_INVERSE)
           standout();
        else
           standend();
        if (win->_text[j])
          str[0] = win->_text[j];
        else
-	 str[0] = ' ';	 
-       DrawString(Xdp, Xwc, Xwcgc, 
-                  charx + x * charwidth, 
-                  chary + y * charheight, 
+	 str[0] = ' ';
+       DrawString(Xdp, Xwc, Xwcgc,
+                  charx + x * charwidth,
+                  chary + y * charheight,
                   str, 1);
     }
   }
@@ -529,7 +527,7 @@ WINDOW *newwin(int nlines, int ncols, int begin_y, int begin_x)
   win->_cur_y = 0;
   win->_cur_attr = 0;
   n = 2*(ncols+1)*(nlines+1);
-  win->_attr = (short *)malloc(n*ATTRSIZE); 
+  win->_attr = (short *)malloc(n*ATTRSIZE);
   win->_text = (char *)malloc(n);
   if (!win->_text || !win->_attr) {
      if (win->_text) free(win->_text);
@@ -624,15 +622,15 @@ WINDOW *initscr(void)
     }
     Xwinwidth &= -4;
     Xwinheight &= -4;
-    if (Xwinwidth > Xwcwidth) 
+    if (Xwinwidth > Xwcwidth)
        Xwcwidth = Xwinwidth;
-    if (Xwinheight > Xwcheight) 
+    if (Xwinheight > Xwcheight)
        Xwcheight = Xwinheight;
     if (Xwcheight<(i=(3*Xwcwidth)/4)) Xwcheight = (i+3)&-4;
     if (Xwcwidth<(i=(4*Xwcheight)/3)) Xwcwidth = (i+3)&-4;
   }
   charx = (Xwcwidth - COLS*charwidth)/2;
-  chary = (Xwcheight - (LINES*charheight+2*(charheight/4)))/2 
+  chary = (Xwcheight - (LINES*charheight+2*(charheight/4)))/2
           + ascent + (charheight/4);
   if (Xwc == None)
      Xwc = XCreateWindow(Xdp, Xroot, Xwinx, Xwiny, Xwcwidth,
@@ -642,7 +640,7 @@ WINDOW *initscr(void)
                          KeyPressMask|KeyReleaseMask|
 		         ButtonPressMask|ButtonReleaseMask|PointerMotionMask);
   wm_protocols = XInternAtom(Xdp, "WM_PROTOCOLS", False);
-  wm_delete_window = XInternAtom(Xdp, "WM_DELETE_WINDOW", False);   
+  wm_delete_window = XInternAtom(Xdp, "WM_DELETE_WINDOW", False);
   XSetWMProtocols(Xdp, Xwc, &wm_delete_window, 1);
 
   XStoreName(Xdp, Xwc, (ctrl_window)?"Xfractint controls":"Xfractint");
@@ -678,7 +676,7 @@ void set_margins(int width, int height)
   int i, j;
   i = width - ((COLS*charwidth+3)&-4);
   j = height - ((LINES*charheight+2*(charheight/4)+3)&-4);
-  if (i<0 || j<0) 
+  if (i<0 || j<0)
      textmargin = 0;
   else
   if (i<j)
@@ -686,12 +684,12 @@ void set_margins(int width, int height)
   else
      textmargin = j/2;
   charx = (width - COLS*charwidth)/2;
-  if (charx < 0) 
+  if (charx < 0)
      charx = 0;
   j = ascent + charheight/4;
   chary = (height - (LINES*charheight+2*(charheight/4)))/2 + j;
   if (chary < j)
-     chary = j; 
+     chary = j;
   if (screenctr) {
     j = chary-ascent; if (j<0) j = 0;
     if (j>0)
@@ -711,7 +709,6 @@ void xpopup(char *str) {
   XSizeHints size_hints;
   char *ptr1, *ptr2;
   int x, y, j, n;
-  unsigned int junk;
 
   if (!Xwc) return;
 
@@ -724,7 +721,7 @@ void xpopup(char *str) {
   iter:
     if ((ptr2=strchr(ptr1, '\n')))
       *ptr2 = '\0';
-    DrawImageString(Xdp, Xwp, Xwcgc, 
+    DrawImageString(Xdp, Xwp, Xwcgc,
 	            charwidth/2, ascent + (charheight/4)+2+n*charheight,
 	            ptr1, strlen(ptr1));
     XFlush(Xdp);

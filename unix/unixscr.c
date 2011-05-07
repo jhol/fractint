@@ -16,9 +16,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef NCURSES
-#include <curses.h>
-#endif
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -45,9 +42,6 @@
 #include "helpdefs.h"
 #include "port.h"
 #include "prototyp.h"
-#ifndef NCURSES
-#include "xfcurses.h"
-#endif
 
 #ifdef LINUX
 #ifndef FNDELAY
@@ -126,7 +120,6 @@ int unixDisk = 0; /* Flag if we use the disk video mode */
 
 static Pixmap	Xpixmap = 0;
 static XSizeHints *size_hints = NULL;
-static int gravity;
 static int xlastcolor = -1;
 static int xlastfcn = GXcopy;
 static BYTE *pixbuf = NULL;
@@ -919,7 +912,7 @@ resizeWindow()
        resize_flag &= ~4;
        parent = 0;
        XQueryTree(Xdp, Xw, &root, &parent, &children, &junkui);
-       if (!parent) parent = Xw;
+       if (!parent || parent == root) parent = Xw;
        XGetGeometry(Xdp, parent, &root, &junki, &junki,
            &width, &height, &junkui, &junkui);
 #ifndef NCURSES
@@ -1870,7 +1863,6 @@ static void
 xhandleevents()
 {
     XEvent xevent;
-    int drawn;
     int bnum;
     int bandx0,bandy0,bandx1,bandy1;
     static int lastx,lasty;
@@ -2416,8 +2408,7 @@ static unsigned char *fontPtr = NULL;
  *----------------------------------------------------------------------
  */
 
-//#ifdef WITH_XFT
-#if 1
+#ifdef WITH_XFT
 /* Avoid Core font protocol by just setting a default font bitmap table */
 unsigned char *
 xgetfont()

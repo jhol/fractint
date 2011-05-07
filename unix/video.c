@@ -1,9 +1,4 @@
 #include <string.h>
-#ifdef NCURSES
-#include <curses.h>
-#else
-#include "xfcurses.h"
-#endif
 #include "port.h"
 #include "prototyp.h"
 /*
@@ -413,7 +408,7 @@ void
 setattr (row, col, attr, count)
      int row, col, attr, count;
 {
-  int i,j;
+  int i;
   int so = 0;
   if (row != -1)
     textrow = row;
