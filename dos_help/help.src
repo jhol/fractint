@@ -282,8 +282,21 @@ typically have a short life and are updated frequently. They may have
 bug fixes, and thus be more stable, but they may also have new features
 which very likely have new bugs.
 
-Version 20.4.10 is an update of Fractint 20.0 based on the developer's
-  version 20.4.9.  New features include:
+Version 20.4.11 is an update of Fractint 20.0 based on the developer's
+  version 20.4.10.  New features include:
+
+Patch 11 to Version 20.4.0\
+
+Fixed creation of sound PARs so that the sound= parameter appears after any
+  other sound related parameters.  Fixed sound related PARs in fract200.par.
+
+Fixed turning off sound when an image with sound is completed.
+
+Marcus Pallinger provided changes to allow compiling Xfractint on an Intel Mac.
+
+Fixed Xfractint version DivideBrot5 fractal type broken with patch 10.
+
+Fixed Xfractint ncurses interface broken with patch 10.
 
 Patch 10 to Version 20.4.0\
 
