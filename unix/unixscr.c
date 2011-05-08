@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef NCURSES
+#include <curses.h>
+#endif
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -42,6 +45,9 @@
 #include "helpdefs.h"
 #include "port.h"
 #include "prototyp.h"
+#ifndef NCURSES
+#include "xfcurses.h"
+#endif
 
 #ifdef LINUX
 #ifndef FNDELAY

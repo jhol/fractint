@@ -102,7 +102,6 @@ void FPUcplxlog(_CMPLX *x, _CMPLX *z)
     xy = x->y;
     if (xx == 0.0 && xy == 0.0) {
         z->x = z->y = 0.0;
-        overflow = 1;
         return;
         }
     mod = xx*xx + xy*xy;
@@ -189,7 +188,7 @@ long x,y;
 }
 
 /*
- * This routine on the IBM converts shifted integer x,FudgeFact to 
+ * This routine on the IBM converts shifted integer x,FudgeFact to
  * the 4 byte number: exp,mant,mant,mant
  * Instead of using exp/mant format, we'll just use floats.
  * Note: If sizeof(float) != sizeof(long), we're hosed.

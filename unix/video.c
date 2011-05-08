@@ -1,4 +1,9 @@
 #include <string.h>
+#ifdef NCURSES
+#include <curses.h>
+#else
+#include "xfcurses.h"
+#endif
 #include "port.h"
 #include "prototyp.h"
 /*

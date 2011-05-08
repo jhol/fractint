@@ -28,6 +28,7 @@
 
 #include <fcntl.h>
 
+#include "xfcurses.h"
 #include "helpdefs.h"
 #include "port.h"
 #include "prototyp.h"

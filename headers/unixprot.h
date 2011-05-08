@@ -3,12 +3,6 @@
 
 /* This file contains prototypes for unix/linux specific functions. */
 
-#ifdef NCURSES
-#include <curses.h>
-#else
-#include "xfcurses.h"
-#endif
-
 /*  calmanp5 -- assembler file prototypes */
 
 extern long  cdecl calcmandfpasm_c(void);
