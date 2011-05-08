@@ -1488,8 +1488,8 @@ int block;
     tout.tv_sec = 0;
     tout.tv_usec = 500000;
     while (1) {
-#if 0
-	if (input_pending()) {
+#if 1
+	if (!initbatch && input_pending()) {
 	    ch = getachar();
 	    if (ch == ESC) {
 		return handleesc();
