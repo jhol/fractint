@@ -298,6 +298,9 @@ Fixed Xfractint version DivideBrot5 fractal type broken with patch 10.
 
 Fixed Xfractint ncurses interface broken with patch 10.
 
+Added a pause to the sound options via the use of the scalemap feature.
+  See {Advanced Sound Controls}.  Allowed scalemap value of 0 in PAR entries.
+
 Patch 10 to Version 20.4.0\
 
 Fixed WinFract resetting palette when parameters are changed with the
