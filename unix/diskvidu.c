@@ -83,11 +83,12 @@ int _fastcall near common_startdisk(long newrowsize, long newcolsize, int colors
 {
    int i;
    long memorysize;
+   char *savenameptr;
 
    if (diskflag)
       enddisk();
    if (dotmode == 11) { /* otherwise, real screen also in use, don't hit it */
-      char buf[20];
+      char buf[50];
       helptitle();
       setattr(1,0,C_DVID_BKGRD,24*80);	/* init rest to background */
       for (i = 0; i < BOXDEPTH; ++i)
@@ -104,7 +105,12 @@ int _fastcall near common_startdisk(long newrowsize, long newcolsize, int colors
 	 putstring(-1,-1,C_DVID_LO,buf);
 	 }
       putstring(BOXROW+6,BOXCOL+4,C_DVID_LO,"Save name: ");
-      sprintf(buf,"%s",savename);
+      savenameptr = strrchr(savename, SLASHC); /* check for full path */
+      if(savenameptr == NULL)
+         savenameptr = savename;
+      else
+         savenameptr++; /* point past slash */
+      sprintf(buf,"%s",savenameptr);
       putstring(-1,-1,C_DVID_LO,buf);
       putstring(BOXROW+8,BOXCOL+4,C_DVID_LO,"Status:");
       dvid_status(0,"clearing the 'screen'");

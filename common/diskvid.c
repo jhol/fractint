@@ -119,6 +119,8 @@ int _fastcall common_startdisk(long newrowsize, long newcolsize, int colors)
    long longtmp;
    unsigned int cache_size;
    BYTE far *tempfar = NULL;
+   char *savenameptr;
+
    if (diskflag)
       enddisk();
    if (dotmode == 11) { /* otherwise, real screen also in use, don't hit it */
@@ -146,17 +148,12 @@ int _fastcall common_startdisk(long newrowsize, long newcolsize, int colors)
          putstring(-1,-1,C_DVID_LO,buf);
          }
       putstring(BOXROW+6,BOXCOL+4,C_DVID_LO,fsname);
-      if (strlen(savename) > 49) /* keep from overflowing buf is savename too long */
-      {
-         char drive[FILE_MAX_DRIVE];
-         char dir[FILE_MAX_DIR];
-         char fname[FILE_MAX_FNAME];
-         char ext[FILE_MAX_EXT];
-         splitpath(savename,drive,dir,fname,ext);
-         sprintf(buf,"%s",fname);
-      }
+      savenameptr = strrchr(savename, SLASHC); /* check for full path */
+      if(savenameptr == NULL)
+         savenameptr = savename;
       else
-         sprintf(buf,"%s",savename);
+         savenameptr++; /* point past slash */
+      sprintf(buf,"%s",savenameptr);
       putstring(-1,-1,C_DVID_LO,buf);
       putstring(BOXROW+10,BOXCOL+4,C_DVID_LO,stat);
       {
