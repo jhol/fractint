@@ -493,7 +493,7 @@ bf_t unsafe_div_bf(bf_t r, bf_t n1, bf_t n2)
 
 /********************************************************************/
 /* sqrt(r)                                                          */
-/* uses bftmp1 - bftmp3 - global temp bigfloats                    */
+/* uses bftmp1 - bftmp4 - global temp bigfloats                     */
 /*  SIDE-EFFECTS:                                                   */
 /*      n ends up as |n|                                            */
 bf_t unsafe_sqrt_bf(bf_t r, bf_t n)
@@ -559,7 +559,8 @@ bf_t unsafe_sqrt_bf(bf_t r, bf_t n)
         r = orig_r + orig_bflength - bflength;
         n = orig_n + orig_bflength - bflength;
 
-        unsafe_div_bf(bftmp3, n, r);
+        copy_bf(bftmp4, r);  /* r is used below, n is not */
+        unsafe_div_bf(bftmp3, n, bftmp4);
         unsafe_add_a_bf(r, bftmp3);
         half_a_bf(r);
         if (bflength == orig_bflength && (comp=abs(cmp_bf(r, bftmp3))) < 8 ) /* if match or almost match */
