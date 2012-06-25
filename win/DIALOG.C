@@ -129,7 +129,7 @@ char parstr0[100], parstr1[100], parstr2[100], parstr3[100];
     switch (message) {
 
         case WM_INITDIALOG:
-            sprintf(tempstring,"fractal type: ");
+            sprintf(tempstring,"Fractal Type: ");
             if (fractalspecific[fractype].name[0] != '*')
                 strcat(tempstring, fractalspecific[fractype].name);
             else
@@ -625,6 +625,9 @@ LPARAM lParam;
                     if (win_temp2 == 4) usr_stdcalcmode = 't';
                     if (win_temp2 == 5) usr_stdcalcmode = 'd';
                     if (win_temp2 == 6) usr_stdcalcmode = 'o';
+                    if(usr_stdcalcmode == 'o' && fractype == LYAPUNOV) /* Oops,lyapunov type */
+                                       /* doesn't use 'new' & breaks orbits */
+                       usr_stdcalcmode = '1';
                     usr_floatflag = win_temp1;
                     GetDlgItemText(hDlg, ID_MAXIT, temp, 11);
                     maxiter = atol(temp);

@@ -1968,14 +1968,14 @@ int plotorbits2dsetup(void)
 {
 
 #ifndef XFRACT
-   if (curfractalspecific->isinteger != 0) {
-      int tofloat;
-      if ((tofloat = curfractalspecific->tofloat) == NOFRACTAL)
-         return(-1);
-      floatflag = usr_floatflag = 1; /* force floating point */
-      curfractalspecific = &fractalspecific[tofloat];
-      fractype = tofloat;
-   }
+//   if (curfractalspecific->isinteger != 0) {
+//      int tofloat;
+//      if ((tofloat = curfractalspecific->tofloat) == NOFRACTAL)
+//         return(-1);
+//      floatflag = usr_floatflag = 1; /* force floating point */
+//      curfractalspecific = &fractalspecific[tofloat];
+//      fractype = tofloat;
+//   }
 #endif
 
    PER_IMAGE();

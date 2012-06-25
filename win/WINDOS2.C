@@ -52,7 +52,7 @@ int badconfig = 0;
 int in_fractint_help = 0;
 
 int win_release = 2004;
-int patchlevel = 4;
+int patchlevel = 12;
 char far win_comment[] =
      {" "};                /*  publicly-released version */
 /*   {"Test Version - Not for Release"};   /* interim test versions */
