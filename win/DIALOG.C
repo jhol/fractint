@@ -624,10 +624,14 @@ LPARAM lParam;
                     if (win_temp2 == 3) usr_stdcalcmode = 'b';
                     if (win_temp2 == 4) usr_stdcalcmode = 't';
                     if (win_temp2 == 5) usr_stdcalcmode = 'd';
-                    if (win_temp2 == 6) usr_stdcalcmode = 'o';
-                    if(usr_stdcalcmode == 'o' && fractype == LYAPUNOV) /* Oops,lyapunov type */
-                                       /* doesn't use 'new' & breaks orbits */
-                       usr_stdcalcmode = '1';
+                    if (win_temp2 == 6) {
+                        usr_stdcalcmode = 'o';
+                        if(fractype == LYAPUNOV) /* Oops,lyapunov type */
+                                                 /* doesn't use 'new' & breaks orbits */
+                           usr_stdcalcmode = '1';
+                        else
+                           win_temp1 = 1; /* force floating point */
+                    }
                     usr_floatflag = win_temp1;
                     GetDlgItemText(hDlg, ID_MAXIT, temp, 11);
                     maxiter = atol(temp);
@@ -680,6 +684,10 @@ LPARAM lParam;
                 case ID_PASSO:
                     win_temp2 = wParam - ID_PASS1;
                     CheckRadioButton(hDlg, ID_PASS1, ID_PASSO, wParam);
+                    if(ID_PASSO) { /* Need to force floating point for passes=o */
+                       win_temp1 = 1;
+                       CheckDlgButton(hDlg, ID_MATHF, win_temp1);
+                    }
                     break;
 
                 case ID_INSIDEC:

@@ -1968,17 +1968,17 @@ int plotorbits2dsetup(void)
 {
 
 #ifndef XFRACT
-//   if (curfractalspecific->isinteger != 0) {
-//      int tofloat;
-//      if ((tofloat = curfractalspecific->tofloat) == NOFRACTAL)
-//         return(-1);
-//      floatflag = usr_floatflag = 1; /* force floating point */
-//      curfractalspecific = &fractalspecific[tofloat];
-//      fractype = tofloat;
-//   }
+   if (curfractalspecific->isinteger != 0) {
+      int tofloat;
+      if ((tofloat = curfractalspecific->tofloat) == NOFRACTAL)
+         return(-1);
+      floatflag = usr_floatflag = 1; /* force floating point */
+      curfractalspecific = &fractalspecific[tofloat];
+      fractype = tofloat;
+   }
 #endif
 
-   PER_IMAGE();
+   curfractalspecific->per_image();
 
    /* setup affine screen coord conversion */
    if (keep_scrn_coords) {
@@ -2047,11 +2047,11 @@ int plotorbits2dfloat(void)
           o_color = 1;    /* (don't use the background color) */
    }
 
-   PER_PIXEL(); /* initialize the calculations */
+   curfractalspecific->per_pixel(); /* initialize the calculations */
 
    for (count = 0; count < maxit; count++) {
 
-       if (ORBITCALC() == 1 && periodicitycheck)
+       if (curfractalspecific->orbitcalc() == 1 && periodicitycheck)
           continue;  /* bailed out, don't plot */
 
        if (count < orbit_delay || count%orbit_interval)
