@@ -3717,7 +3717,7 @@ static char *PrepareFormula(FILE * File, int from_prompts1c) {
       return NULL;
    }
 
-   if(chars_in_formula > 8190) {
+   if(chars_in_formula > (MAX_BOXX - 2)) {
       fseek(File, filepos, SEEK_SET);
       return NULL;
    }
@@ -3920,6 +3920,7 @@ static void parser_allocate(void)
 
    long f_size,Store_size,Load_size,v_size, p_size;
    int pass, is_bad_form=0;
+   int big_formula = 0;
    long end_dx_array;
    /* TW Jan 1 1996 Made two passes to determine actual values of
       Max_Ops and Max_Args. Now use the end of extraseg if possible, so
@@ -3946,20 +3947,23 @@ static void parser_allocate(void)
       else
          end_dx_array = 0;
 
-      if(pass == 0 || is_bad_form)
+      if (strlen(FormStr) > 4000) /* Emperically determined and quite arbitrary */
+	 big_formula = 1;
+
+      if((pass == 0 || is_bad_form) && !big_formula)
       {
          typespecific_workarea = (char far *)MK_FP(extraseg,0);
          used_extra = 1;
       }
-      else if(1L<<16 > end_dx_array + total_formula_mem)
+      else if((1L<<16 > end_dx_array + total_formula_mem) && !big_formula)
       {
          typespecific_workarea = (char far *)MK_FP(extraseg,0) + end_dx_array;
          used_extra = 1;
       }
-      else if(is_bad_form == 0)
+      else if(is_bad_form == 0 || big_formula)
       {
          typespecific_workarea =
-            (char far *)farmemalloc((long)(f_size+Load_size+Store_size+v_size+p_size));
+            (char far *)farmemalloc((long)(total_formula_mem * 3));
          used_extra = 0;
       }
       f = (void(far * far *)(void))typespecific_workarea;
