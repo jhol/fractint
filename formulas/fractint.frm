@@ -85,8 +85,9 @@ DAFRM07 {
 DAFRM09 {
   z = pixel, c = z + z^ (z - 1):
    tmp = fn1(z)
-   real(tmp) = real(tmp) * real(c) - imag(tmp) * imag(c)
-   imag(tmp) = real(tmp) * imag(c) - imag(tmp) * real(c)
+   tmp_r = real(tmp) * real(c) - imag(tmp) * imag(c)
+   tmp_i = real(tmp) * imag(c) - imag(tmp) * real(c)
+   tmp = tmp_r + flip(tmp_i)
    z = tmp + pixel + 12
     |z| <= 4
   }

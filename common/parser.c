@@ -3921,7 +3921,19 @@ static void parser_allocate(void)
    long f_size,Store_size,Load_size,v_size, p_size;
    int pass, is_bad_form=0;
    int big_formula = 0;
+   double big_formula_factor = 1.0;
    long end_dx_array;
+
+   if(use_grid)
+      end_dx_array = 2L*(long)(xdots+ydots)*sizeof(double);
+   else
+      end_dx_array = 0;
+
+   if (strlen(FormStr) > 4000) /* Emperically determined and quite arbitrary */
+   { 
+     big_formula = 1;
+     big_formula_factor = (double)strlen(FormStr) / 4000;
+   }
    /* TW Jan 1 1996 Made two passes to determine actual values of
       Max_Ops and Max_Args. Now use the end of extraseg if possible, so
       if less than 2048x2048 resolution is used, usually no farmemalloc
@@ -3942,28 +3954,27 @@ static void parser_allocate(void)
          + sizeof(struct PEND_OP) * Max_Ops;
       used_extra = 0;
 
-      if(use_grid)
-         end_dx_array = 2L*(long)(xdots+ydots)*sizeof(double);
-      else
-         end_dx_array = 0;
-
-      if (strlen(FormStr) > 4000) /* Emperically determined and quite arbitrary */
-	 big_formula = 1;
-
-      if((pass == 0 || is_bad_form) && !big_formula)
+      if(pass == 0 || is_bad_form)
       {
-         typespecific_workarea = (char far *)MK_FP(extraseg,0);
-         used_extra = 1;
+        if (big_formula)
+        {
+          typespecific_workarea = (char far *)farmemalloc((long)(total_formula_mem * big_formula_factor));
+          used_extra = 0;
+        }
+        else
+        {
+          typespecific_workarea = (char far *)MK_FP(extraseg,0);
+          used_extra = 1;
+        }
       }
-      else if((1L<<16 > end_dx_array + total_formula_mem) && !big_formula)
+      else if(1L<<16 > end_dx_array + total_formula_mem)
       {
          typespecific_workarea = (char far *)MK_FP(extraseg,0) + end_dx_array;
          used_extra = 1;
       }
-      else if(is_bad_form == 0 || big_formula)
+      else if(is_bad_form == 0)
       {
-         typespecific_workarea =
-            (char far *)farmemalloc((long)(total_formula_mem * 3));
+         typespecific_workarea = (char far *)farmemalloc((long)total_formula_mem);
          used_extra = 0;
       }
       f = (void(far * far *)(void))typespecific_workarea;
@@ -3980,7 +3991,7 @@ static void parser_allocate(void)
             Max_Ops = posp+4;
             Max_Args = vsp+4;
          }
-         typespecific_workarea = NULL;
+/*         typespecific_workarea = NULL; This gets set when free_workarea() is called above */
       }
    }
    uses_p1 = uses_p2 = uses_p3 = uses_p4 = uses_p5 = 0;
@@ -3997,7 +4008,7 @@ void free_workarea()
    v = (struct ConstArg far *)0;
    f = (void(far * far *)(void))0;      /* CAE fp */
    pfls = (struct fls far * )0;   /* CAE fp */
-   total_formula_mem = 0;
+/*   total_formula_mem = 0; Leave this set to last value */
 
    /* restore extraseg */
    if(integerfractal && !invert)
