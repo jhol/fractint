@@ -200,7 +200,7 @@ void setMPfunctions(void) {
 _CMPLX ComplexPower(_CMPLX xx, _CMPLX yy) {
    _CMPLX z, cLog, t;
    LDBL e2x;
-   double siny, cosy;
+   LDBL siny, cosy;
 
    /* fixes power bug - if any complaints, backwards compatibility hook
       goes here TIW 3/95 */
@@ -226,8 +226,8 @@ _CMPLX ComplexPower(_CMPLX xx, _CMPLX yy) {
          e2x = 1.0;
 #endif
       FPUsincos(&t.y, &siny, &cosy);
-      z.x = (double) (e2x * cosy);
-      z.y = (double) (e2x * siny);
+      z.x = (LDBL) (e2x * cosy);
+      z.y = (LDBL) (e2x * siny);
    }
    return(z);
 }
@@ -300,15 +300,15 @@ void Arctanhz(_CMPLX z,_CMPLX *rz)
 
   if( z.x == 0.0){
     rz->x = 0;
-    rz->y = atan( z.y);
+    rz->y = atanl( z.y);
     return;
   }
   else{
-    if( fabs(z.x) == 1.0 && z.y == 0.0){
+    if( fabsl(z.x) == 1.0 && z.y == 0.0){
       return;
     }
-    else if( fabs( z.x) < 1.0 && z.y == 0.0){
-      rz->x = log((1+z.x)/(1-z.x))/2;
+    else if( fabsl( z.x) < 1.0 && z.y == 0.0){
+      rz->x = logl((1+z.x)/(1-z.x))/2;
       rz->y = 0;
       return;
     }
@@ -330,7 +330,7 @@ void Arctanz(_CMPLX z,_CMPLX *rz)
   if( z.x == 0.0 && z.y == 0.0)
     rz->x = rz->y = 0;
   else if( z.x != 0.0 && z.y == 0.0){
-    rz->x = atan( z.x);
+    rz->x = atanl( z.x);
     rz->y = 0;
   }
   else if( z.x == 0.0 && z.y != 0.0){
@@ -420,18 +420,18 @@ LCMPLX ComplexSqrtLong(long x, long y)
    return result;
 }
 
-_CMPLX ComplexSqrtFloat(double x, double y)
+_CMPLX ComplexSqrtFloat(LDBL x, LDBL y)
 {
-   double mag;
-   double theta;
+   LDBL mag;
+   LDBL theta;
    _CMPLX  result;
 
    if(x == 0.0 && y == 0.0)
       result.x = result.y = 0.0;
    else
    {
-      mag   = sqrt(sqrt(x*x + y*y));
-      theta = atan2(y, x) / 2;
+      mag   = sqrtl(sqrtl(x*x + y*y));
+      theta = atan2l(y, x) / 2;
       FPUsincos(&theta, &result.y, &result.x);
       result.x *= mag;
       result.y *= mag;
@@ -580,7 +580,7 @@ long far ExpFloat14(long xx) {
    return(RegFg2Float(Ans, (char)f));
 }
 
-double TwoPi;
+LDBL TwoPi;
 _CMPLX temp, BaseLog;
 _CMPLX cdegree = { 3.0, 0.0 }, croot   = { 1.0, 0.0 };
 
@@ -594,7 +594,7 @@ int ComplexNewtonSetup(void) {
       cdegree.x = param[0];
       cdegree.y = param[1];
       FPUcplxlog(&croot, &BaseLog);
-      TwoPi = asin(1.0) * 4;
+      TwoPi = asinl(1.0) * 4;
    }
    return(1);
 }
@@ -633,7 +633,7 @@ int ComplexNewton(void) {
 
 int ComplexBasin(void) {
    _CMPLX cd1;
-   double mod;
+   LDBL mod;
 
    /* new = ((cdegree-1) * old**cdegree) + croot
             ----------------------------------
@@ -648,13 +648,13 @@ int ComplexBasin(void) {
    tmp.x = new.x - croot.x;
    tmp.y = new.y - croot.y;
    if((sqr(tmp.x) + sqr(tmp.y)) < threshold) {
-      if(fabs(old.y) < .01)
+      if(fabsl(old.y) < .01)
          old.y = 0.0;
       FPUcplxlog(&old, &temp);
       FPUcplxmul(&temp, &cdegree, &tmp);
       mod = tmp.y/TwoPi;
       coloriter = (long)mod;
-      if(fabs(mod - coloriter) > 0.5) {
+      if(fabsl(mod - coloriter) > 0.5) {
          if(mod < 0.0)
             coloriter--;
          else

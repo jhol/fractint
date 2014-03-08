@@ -408,13 +408,17 @@ extern struct DIR_SEARCH DTA;   /* Disk Transfer Area */
 #define LDBL_ROUNDS     DBL_ROUNDS     /* addition rounding: near */
 #endif
 
-#define sqrtl           sqrt
+#define atanl           atan
+#define atan2l          atan2
+#define ceill           ceil
+#define cosl            cos
+#define expl            exp
+#define fabsl           fabs
+#define floorl          floor
 #define logl            log
 #define log10l          log10
-#define atanl           atan
-#define fabsl           fabs
 #define sinl            sin
-#define cosl            cos
-#endif
+#define sqrtl           sqrt
+#endif /* #ifdef DO_NOT_USE_LONG_DOUBLE */
 
 #endif  /* PORT_H */

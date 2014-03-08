@@ -14,7 +14,11 @@ struct LHyperComplex {
 };
 
 struct DComplex {
-    double x,y;
+#ifndef XFRACT
+  double x,y;
+#else
+  LDBL x,y;
+#endif
 };
 
 struct LDComplex {

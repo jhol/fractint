@@ -1026,11 +1026,11 @@ void Jiim(int which)         /* called by fractint */
 
 /*       r = sqrt(old.x*old.x + old.y*old.y); calculated above */
          r = sqrt(r);
-         new.x = sqrt(fabs((r + old.x)/2));
+         new.x = sqrtl(fabsl((r + old.x)/2));
          if (old.y < 0)
             new.x = -new.x;
 
-         new.y = sqrt(fabs((r - old.x)/2));
+         new.y = sqrtl(fabsl((r - old.x)/2));
 
 
          switch (SecretExperimentalMode) {

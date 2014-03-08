@@ -98,7 +98,7 @@ void (_fastcall *plot)(int,int,int) = putcolor_a;
 typedef void (_fastcall *PLOTC)(int,int,int);
 typedef void (_fastcall *GETC)(int,int,int);
 
-double magnitude, rqlim, rqlim2, rqlim_save;
+LDBL magnitude, rqlim, rqlim2, rqlim_save;
 int no_mag_calc = 0;
 int use_old_period = 0;
 int use_old_distest = 0;
@@ -226,9 +226,9 @@ static int showdot_width = 0;
    methods are not used - in these cases a normal
    modulus test is used                              */
 
-double fmodtest(void)
+LDBL fmodtest(void)
 {
-   double result;
+   LDBL result;
    if (inside==FMODI && save_release <= 2000) /* for backwards compatibility */
    {
       if (magnitude == 0.0 || no_mag_calc == 0 || integerfractal)
@@ -265,7 +265,7 @@ double fmodtest(void)
       }break;
    case (Manh):
       {
-      result=sqr(fabs(new.x)+fabs(new.y));
+      result=sqr(fabsl(new.x)+fabsl(new.y));
       }break;
    case (Manr):
       {
@@ -1778,7 +1778,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
    long dem_color = -1;
    _CMPLX dem_new;
    int check_freq;
-   double totaldist = 0.0;
+   LDBL totaldist = 0.0;
    _CMPLX lastz;
 
    lcloseprox = (long)(closeprox*fudge);
@@ -1896,8 +1896,8 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
    if (outside == TDIS) {
       if(integerfractal)
       {
-         old.x = ((double)lold.x) / fudge;
-         old.y = ((double)lold.y) / fudge;
+         old.x = ((LDBL)lold.x) / fudge;
+         old.y = ((LDBL)lold.y) / fudge;
       }
       else if (bf_math == BIGNUM)
          old = cmplxbntofloat(&bnold);
@@ -1925,7 +1925,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
 
       if (distest)
       {
-         double ftemp;
+         LDBL ftemp;
          /* Distance estimator for points near Mandelbrot set */
          /* Original code by Phil Wilson, hacked around by PB */
          /* Algorithms from Peitgen & Saupe, Science of Fractal Images, p.198 */
@@ -1940,7 +1940,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
                break;
          }
          else if (save_release > 1950)
-            if (max(fabs(deriv.x),fabs(deriv.y)) > dem_toobig)
+            if (max(fabsl(deriv.x),fabsl(deriv.y)) > dem_toobig)
                break;
          /* if above exit taken, the later test vs dem_delta will place this
                     point on the boundary, because mag(old)<bailout just now */
@@ -2036,12 +2036,12 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
             }
             else
             {
-               if(fabs(new.x) < fabs(closeprox))
+               if(fabsl(new.x) < fabsl(closeprox))
                {
                   hooper = (closeprox>0? 1 : -1); /* close to y axis */
                   goto plot_inside;
                }
-               else if(fabs(new.y) < fabs(closeprox))
+               else if(fabsl(new.y) < fabsl(closeprox))
                {
                   hooper = (closeprox>0? 2 : -2); /* close to x axis */
                   goto plot_inside;
@@ -2053,8 +2053,8 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
             double mag;
             if(integerfractal)
             {
-               new.x = ((double)lnew.x) / fudge;
-               new.y = ((double)lnew.y) / fudge;
+               new.x = ((LDBL)lnew.x) / fudge;
+               new.y = ((LDBL)lnew.y) / fudge;
             }
             mag = fmodtest();
             if(mag < closeprox)
@@ -2090,10 +2090,10 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
          {
             if(integerfractal)
             {
-               new.x = ((double)lnew.x) / fudge;
-               new.y = ((double)lnew.y) / fudge;
+               new.x = ((LDBL)lnew.x) / fudge;
+               new.y = ((LDBL)lnew.y) / fudge;
             }
-            totaldist += sqrt(sqr(lastz.x-new.x)+sqr(lastz.y-new.y));
+            totaldist += sqrtl(sqr(lastz.x-new.x)+sqr(lastz.y-new.y));
             lastz.x = new.x;
             lastz.y = new.y;
          }
@@ -2102,8 +2102,8 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
             double mag;
             if(integerfractal)
             {
-               new.x = ((double)lnew.x) / fudge;
-               new.y = ((double)lnew.y) / fudge;
+               new.x = ((LDBL)lnew.x) / fudge;
+               new.y = ((LDBL)lnew.y) / fudge;
             }
             mag = fmodtest();
             if(mag < closeprox)
@@ -2217,8 +2217,8 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
             }
             else
             {
-               if (fabs(saved.x - new.x) < closenuff)
-                  if (fabs(saved.y - new.y) < closenuff)
+               if (fabsl(saved.x - new.x) < closenuff)
+                  if (fabsl(saved.y - new.y) < closenuff)
                      caught_a_cycle = 1;
 #ifdef NUMSAVED
                int i;
@@ -2226,8 +2226,8 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
                 {
                    if(caught[i] == 0)
                    {
-                      if (fabs(savedz[i].x - new.x) < closenuff)
-                         if (fabs(savedz[i].y - new.y) < closenuff)
+                      if (fabsl(savedz[i].x - new.x) < closenuff)
+                         if (fabsl(savedz[i].y - new.y) < closenuff)
                              caught[i] = coloriter;
                    }
                 }
@@ -2278,18 +2278,18 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
    {
       if (integerfractal)       /* adjust integer fractals */
       {
-         new.x = ((double)lnew.x) / fudge;
-         new.y = ((double)lnew.y) / fudge;
+         new.x = ((LDBL)lnew.x) / fudge;
+         new.y = ((LDBL)lnew.y) / fudge;
       }
       else if (bf_math==BIGNUM)
       {
-         new.x = (double)bntofloat(bnnew.x);
-         new.y = (double)bntofloat(bnnew.y);
+         new.x = (LDBL)bntofloat(bnnew.x);
+         new.y = (LDBL)bntofloat(bnnew.y);
       }
       else if (bf_math==BIGFLT)
       {
-         new.x = (double)bftofloat(bfnew.x);
-         new.y = (double)bftofloat(bfnew.y);
+         new.x = (LDBL)bftofloat(bfnew.x);
+         new.y = (LDBL)bftofloat(bfnew.y);
       }
       magnitude = sqr(new.x) + sqr(new.y);
       coloriter = potential(magnitude, coloriter);
@@ -2306,13 +2306,13 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
    {
       if (integerfractal)
       {
-         new.x = ((double)lnew.x) / fudge;
-         new.y = ((double)lnew.y) / fudge;
+         new.x = ((LDBL)lnew.x) / fudge;
+         new.y = ((LDBL)lnew.y) / fudge;
       }
       else if(bf_math==1)
       {
-         new.x = (double)bntofloat(bnnew.x);
-         new.y = (double)bntofloat(bnnew.y);
+         new.x = (LDBL)bntofloat(bnnew.x);
+         new.y = (LDBL)bntofloat(bnnew.y);
       }
       /* Add 7 to overcome negative values on the MANDEL    */
       if (outside == REAL)               /* "real" */
@@ -2320,11 +2320,11 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
       else if (outside == IMAG)          /* "imag" */
          coloriter += (long)new.y + 7;
       else if (outside == MULT  && new.y)  /* "mult" */
-          coloriter = (long)((double)coloriter * (new.x/new.y));
+          coloriter = (long)((LDBL)coloriter * (new.x/new.y));
       else if (outside == SUM)           /* "sum" */
           coloriter += (long)(new.x + new.y);
       else if (outside == ATAN)          /* "atan" */
-          coloriter = (long)fabs(atan2(new.y,new.x)*atan_colors/PI);
+          coloriter = (long)fabsl(atan2l(new.y,new.x)*atan_colors/PI);
       else if (outside == FMOD)
           coloriter = (long)(memvalue * colors / closeprox);
       else if (outside == TDIS) {
@@ -2343,12 +2343,12 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
 
    if (distest)
    {
-      double dist,temp;
+      LDBL dist,temp;
       dist = sqr(new.x) + sqr(new.y);
       if (dist == 0 || overflow)
          dist = 0;
       else {
-         temp = log(dist);
+         temp = logl(dist);
          dist = dist * sqr(temp) / ( sqr(deriv.x) + sqr(deriv.y) );
       }
       if (dist < dem_delta)     /* point is on the edge */
@@ -2366,9 +2366,9 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
       if (distest > 1)          /* pick color based on distance */
       {
          if (old_demm_colors) /* this one is needed for old color scheme */
-            coloriter = (long)sqrt(sqrt(dist) / dem_width + 1);
+            coloriter = (long)sqrtl(sqrtl(dist) / dem_width + 1);
          else if (use_old_distest)
-            coloriter = (long)sqrt(dist / dem_width + 1);
+            coloriter = (long)sqrtl(dist / dem_width + 1);
          else
             coloriter = (long)(dist / dem_width + 1);
          coloriter &= LONG_MAX;  /* oops - color can be negative */
@@ -2391,7 +2391,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
             coloriter = biomorph;
       }
       else
-         if (fabs(new.x) < rqlim2 || fabs(new.y) < rqlim2)
+         if (fabsl(new.x) < rqlim2 || fabsl(new.y) < rqlim2)
             coloriter = biomorph;
    }
 
@@ -2447,14 +2447,14 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
       }
       else if (inside == ATANI)          /* "atan" */
          if (integerfractal) {
-            new.x = ((double)lnew.x) / fudge;
-            new.y = ((double)lnew.y) / fudge;
-            coloriter = (long)fabs(atan2(new.y,new.x)*atan_colors/PI);
+            new.x = ((LDBL)lnew.x) / fudge;
+            new.y = ((LDBL)lnew.y) / fudge;
+            coloriter = (long)fabsl(atan2l(new.y,new.x)*atan_colors/PI);
          }
          else
-            coloriter = (long)fabs(atan2(new.y,new.x)*atan_colors/PI);
+            coloriter = (long)fabsl(atan2l(new.y,new.x)*atan_colors/PI);
       else if (inside == BOF60)
-         coloriter = (long)(sqrt(min_orbit) * 75);
+         coloriter = (long)(sqrtl(min_orbit) * 75);
       else if (inside == BOF61)
          coloriter = min_index;
       else if (inside == ZMAG)
@@ -2466,7 +2466,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
             new.y = ((double)lnew.y) / fudge;
             coloriter = (long)((((double)lsqr(lnew.x))/fudge + ((double)lsqr(lnew.y))/fudge) * (maxit>>1) + 1);
             */
-            coloriter = (long)(((double)lmagnitud/fudge) * (maxit>>1) + 1);
+            coloriter = (long)(((LDBL)lmagnitud/fudge) * (maxit>>1) + 1);
          }
          else
             coloriter = (long)((sqr(new.x) + sqr(new.y)) * (maxit>>1) + 1);

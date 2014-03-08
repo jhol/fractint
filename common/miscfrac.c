@@ -504,7 +504,7 @@ int diffusion()
    int colorcount,currentcolor;
   
    int i;
-   double cosine,sine,angle;
+   LDBL cosine,sine,angle;
    int x,y;
    float r, radius;
 
@@ -590,7 +590,7 @@ int diffusion()
    {
       switch (mode) {
       case 0: /* Release new point on a circle inside the box */
-               angle=2*(double)rand()/(RAND_MAX/PI);
+               angle=2*(LDBL)rand()/(RAND_MAX/PI);
                FPUsincos(&angle,&sine,&cosine);
                x = (int)(cosine*(xmax-xmin) + xdots);
                y = (int)(sine  *(ymax-ymin) + ydots);
@@ -604,7 +604,7 @@ int diffusion()
               break;
       case 2: /* Release new point on a circle inside the box with radius
                  given by the radius variable */
-               angle=2*(double)rand()/(RAND_MAX/PI);
+               angle=2*(LDBL)rand()/(RAND_MAX/PI);
                FPUsincos(&angle,&sine,&cosine);
                x = (int)(cosine*radius + xdots);
                y = (int)(sine  *radius + ydots);

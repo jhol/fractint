@@ -42,9 +42,9 @@ long calcmandfpasm_c(void) {
     int savedincr;
     long tmpfsd;
 #if USE_NEW
-    double x,y,x2, y2, xy, Cx, Cy, savedmag;
+    LDBL x,y,x2, y2, xy, Cx, Cy, savedmag;
 #else
-    double x,y,x2, y2, xy, Cx, Cy, savedx, savedy;
+    LDBL x,y,x2, y2, xy, Cx, Cy, savedx, savedy;
 #endif
 
     if (periodicitycheck==0) {
@@ -198,11 +198,11 @@ over_bailout_87:
 	} else if (outside==IMAG) {
 	    coloriter += (long)new.y + 7;
 	} else if (outside==MULT && new.y!=0.0) {
-          coloriter = (long)((double)coloriter * (new.x/new.y));
+          coloriter = (long)((LDBL)coloriter * (new.x/new.y));
 	} else if (outside==SUM) {
 	    coloriter +=  (long)(new.x + new.y);
 	} else if (outside==ATAN) {
-            coloriter = (long)fabs(atan2(new.y,new.x)*atan_colors/PI);
+            coloriter = (long)fabsl(atan2l(new.y,new.x)*atan_colors/PI);
         }
 	/* check_color */
       if ((coloriter <= 0 || coloriter > maxit) && outside!=FMOD)

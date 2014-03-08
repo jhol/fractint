@@ -226,7 +226,7 @@ unsigned int chars_in_formula;
 #endif
 
 #define ChkFloatDenom(denom)\
-    if (fabs(denom) <= DBL_MIN) {\
+    if (fabsl(denom) <= LDBL_MIN) {\
         if (save_release > 1920) overflow = 1;\
         return;\
     }
@@ -359,16 +359,16 @@ static void mStkFunct(void (*fct)(void))   /* call lStk via dStk */
 
 static void lStkFunct(void (*fct)(void))   /* call lStk via dStk */
 {
-   double y;
+   LDBL y;
    /*
       intermediate variable needed for safety because of
       different size of double and long in Arg union
    */
-   y = (double)Arg1->l.y / fg;
-   Arg1->d.x = (double)Arg1->l.x / fg;
+   y = (LDBL)Arg1->l.y / fg;
+   Arg1->d.x = (LDBL)Arg1->l.x / fg;
    Arg1->d.y = y;
    (*fct)();
-   if(fabs(Arg1->d.x) < fgLimit && fabs(Arg1->d.y) < fgLimit) {
+   if(fabsl(Arg1->d.x) < fgLimit && fabsl(Arg1->d.y) < fgLimit) {
       Arg1->l.x = (long)(Arg1->d.x * fg);
       Arg1->l.y = (long)(Arg1->d.y * fg);
    }
@@ -385,12 +385,12 @@ static void lStkFunct(void (*fct)(void))   /* call lStk via dStk */
 
 /* call lStk via dStk */
 #define lStkFunct(fct) {\
-   double y;\
-   y = (double)Arg1->l.y / fg;\
-   Arg1->d.x = (double)Arg1->l.x / fg;\
+   LDBL y;\
+   y = (LDBL)Arg1->l.y / fg;\
+   Arg1->d.x = (LDBL)Arg1->l.x / fg;\
    Arg1->d.y = y;\
    (*fct)();\
-   if(fabs(Arg1->d.x) < fgLimit && fabs(Arg1->d.y) < fgLimit) {\
+   if(fabsl(Arg1->d.x) < fgLimit && fabsl(Arg1->d.y) < fgLimit) {\
       Arg1->l.x = (long)(Arg1->d.x * fg);\
       Arg1->l.y = (long)(Arg1->d.y * fg);\
    }\
@@ -424,8 +424,8 @@ void dRandom(void)
           the same fractals when the srand() function is used. */
    x = NewRandNum() >> (32 - bitshift);
    y = NewRandNum() >> (32 - bitshift);
-   v[7].a.d.x = ((double)x / (1L << bitshift));
-   v[7].a.d.y = ((double)y / (1L << bitshift));
+   v[7].a.d.x = ((LDBL)x / (1L << bitshift));
+   v[7].a.d.y = ((LDBL)y / (1L << bitshift));
 
 }
 
@@ -568,8 +568,8 @@ void dStkSqr3()
 
 
 void dStkAbs(void) {
-   Arg1->d.x = fabs(Arg1->d.x);
-   Arg1->d.y = fabs(Arg1->d.y);
+   Arg1->d.x = fabsl(Arg1->d.x);
+   Arg1->d.y = fabsl(Arg1->d.y);
 }
 
 #ifndef XFRACT
@@ -698,8 +698,8 @@ void lStkConj(void) {
 void (*StkConj)(void) = dStkConj;
 
 void dStkFloor(void) {
-   Arg1->d.x = floor(Arg1->d.x);
-   Arg1->d.y = floor(Arg1->d.y);
+   Arg1->d.x = floorl(Arg1->d.x);
+   Arg1->d.y = floorl(Arg1->d.y);
 }
 
 #ifndef XFRACT
@@ -722,8 +722,8 @@ void lStkFloor(void) {
 void (*StkFloor)(void) = dStkFloor;
 
 void dStkCeil(void) {
-   Arg1->d.x = ceil(Arg1->d.x);
-   Arg1->d.y = ceil(Arg1->d.y);
+   Arg1->d.x = ceill(Arg1->d.x);
+   Arg1->d.y = ceill(Arg1->d.y);
 }
 
 #ifndef XFRACT
@@ -744,8 +744,8 @@ void lStkCeil(void) {
 void (*StkCeil)(void) = dStkCeil;
 
 void dStkTrunc(void) {
-   Arg1->d.x = (int)(Arg1->d.x);
-   Arg1->d.y = (int)(Arg1->d.y);
+   Arg1->d.x = (long)(Arg1->d.x);
+   Arg1->d.y = (long)(Arg1->d.y);
 }
 
 #ifndef XFRACT
@@ -773,8 +773,8 @@ void lStkTrunc(void) {
 void (*StkTrunc)(void) = dStkTrunc;
 
 void dStkRound(void) {
-   Arg1->d.x = floor(Arg1->d.x+.5);
-   Arg1->d.y = floor(Arg1->d.y+.5);
+   Arg1->d.x = floorl(Arg1->d.x+.5);
+   Arg1->d.y = floorl(Arg1->d.y+.5);
 }
 
 #ifndef XFRACT
@@ -1020,7 +1020,7 @@ void (*PtrStkClr)(void) = StkClr;
 /* MCP 4-9-91, Added Flip() */
 
 void dStkFlip(void) {
-   double t;
+   LDBL t;
 
    t = Arg1->d.x;
    Arg1->d.x = Arg1->d.y;
@@ -1048,7 +1048,7 @@ void lStkFlip(void) {
 void (*StkFlip)(void) = dStkFlip;
 
 void dStkSin(void) {
-   double sinx, cosx, sinhy, coshy;
+   LDBL sinx, cosx, sinhy, coshy;
 
    FPUsincos(&Arg1->d.x, &sinx, &cosx);
    FPUsinhcosh(&Arg1->d.y, &sinhy, &coshy);
@@ -1078,7 +1078,7 @@ void (*StkSin)(void) = dStkSin;
    variable replacement. TIW 04-22-91 */
 
 void dStkTan(void) {
-   double sinx, cosx, sinhy, coshy, denom;
+   LDBL sinx, cosx, sinhy, coshy, denom;
    Arg1->d.x *= 2;
    Arg1->d.y *= 2;
    FPUsincos(&Arg1->d.x, &sinx, &cosx);
@@ -1112,7 +1112,7 @@ void lStkTan(void) {
 void (*StkTan)(void) = dStkTan;
 
 void dStkTanh(void) {
-   double siny, cosy, sinhx, coshx, denom;
+   LDBL siny, cosy, sinhx, coshx, denom;
    Arg1->d.x *= 2;
    Arg1->d.y *= 2;
    FPUsincos(&Arg1->d.y, &siny, &cosy);
@@ -1146,7 +1146,7 @@ void lStkTanh(void) {
 void (*StkTanh)(void) = dStkTanh;
 
 void dStkCoTan(void) {
-   double sinx, cosx, sinhy, coshy, denom;
+   LDBL sinx, cosx, sinhy, coshy, denom;
    Arg1->d.x *= 2;
    Arg1->d.y *= 2;
    FPUsincos(&Arg1->d.x, &sinx, &cosx);
@@ -1180,7 +1180,7 @@ void lStkCoTan(void) {
 void (*StkCoTan)(void) = dStkCoTan;
 
 void dStkCoTanh(void) {
-   double siny, cosy, sinhx, coshx, denom;
+   LDBL siny, cosy, sinhx, coshx, denom;
    Arg1->d.x *= 2;
    Arg1->d.y *= 2;
    FPUsincos(&Arg1->d.y, &siny, &cosy);
@@ -1220,7 +1220,7 @@ void (*StkCoTanh)(void) = dStkCoTanh;
    the other parser functions. TIW 04-22-91 */
 
 void dStkRecip(void) {
-   double mod;
+   LDBL mod;
    mod =Arg1->d.x * Arg1->d.x + Arg1->d.y * Arg1->d.y;
    ChkFloatDenom(mod);
    Arg1->d.x =  Arg1->d.x/mod;
@@ -1257,7 +1257,7 @@ void StkIdent(void) { /* do nothing - the function Z */
 /* End TIW 04-22-91 */
 
 void dStkSinh(void) {
-   double siny, cosy, sinhx, coshx;
+   LDBL siny, cosy, sinhx, coshx;
 
    FPUsincos(&Arg1->d.y, &siny, &cosy);
    FPUsinhcosh(&Arg1->d.x, &sinhx, &coshx);
@@ -1285,7 +1285,7 @@ void lStkSinh(void) {
 void (*StkSinh)(void) = dStkSinh;
 
 void dStkCos(void) {
-   double sinx, cosx, sinhy, coshy;
+   LDBL sinx, cosx, sinhy, coshy;
 
    FPUsincos(&Arg1->d.x, &sinx, &cosx);
    FPUsinhcosh(&Arg1->d.y, &sinhy, &coshy);
@@ -1333,7 +1333,7 @@ void lStkCosXX(void) {
 void (*StkCosXX)(void) = dStkCosXX;
 
 void dStkCosh(void) {
-   double siny, cosy, sinhx, coshx;
+   LDBL siny, cosy, sinhx, coshx;
 
    FPUsincos(&Arg1->d.y, &siny, &cosy);
    FPUsinhcosh(&Arg1->d.x, &sinhx, &coshx);
@@ -1476,7 +1476,7 @@ void lStkSqrt(void) {
 void (*StkSqrt)(void) = dStkSqrt;
 
 void dStkCAbs(void) {
-   Arg1->d.x = sqrt(sqr(Arg1->d.x)+sqr(Arg1->d.y));
+   Arg1->d.x = sqrtl(sqr(Arg1->d.x)+sqr(Arg1->d.y));
    Arg1->d.y = 0.0;
 }
 
@@ -1495,7 +1495,7 @@ void (*StkCAbs)(void) = dStkCAbs;
 /* TIW end arc functions 11-25-94 */
 
 void dStkLT(void) {
-   Arg2->d.x = (double)(Arg2->d.x < Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x < Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1520,7 +1520,7 @@ void lStkLT(void) {
 void (*StkLT)(void) = dStkLT;
 
 void dStkGT(void) {
-   Arg2->d.x = (double)(Arg2->d.x > Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x > Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1545,7 +1545,7 @@ void lStkGT(void) {
 void (*StkGT)(void) = dStkGT;
 
 void dStkLTE(void) {
-   Arg2->d.x = (double)(Arg2->d.x <= Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x <= Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1573,7 +1573,7 @@ void lStkLTE(void) {
 void (*StkLTE)(void) = dStkLTE;
 
 void dStkGTE(void) {
-   Arg2->d.x = (double)(Arg2->d.x >= Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x >= Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1601,7 +1601,7 @@ void lStkGTE(void) {
 void (*StkGTE)(void) = dStkGTE;
 
 void dStkEQ(void) {
-   Arg2->d.x = (double)(Arg2->d.x == Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x == Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1629,7 +1629,7 @@ void lStkEQ(void) {
 void (*StkEQ)(void) = dStkEQ;
 
 void dStkNE(void) {
-   Arg2->d.x = (double)(Arg2->d.x != Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x != Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1657,7 +1657,7 @@ void lStkNE(void) {
 void (*StkNE)(void) = dStkNE;
 
 void dStkOR(void) {
-   Arg2->d.x = (double)(Arg2->d.x || Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x || Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1682,7 +1682,7 @@ void lStkOR(void) {
 void (*StkOR)(void) = dStkOR;
 
 void dStkAND(void) {
-   Arg2->d.x = (double)(Arg2->d.x && Arg1->d.x);
+   Arg2->d.x = (LDBL)(Arg2->d.x && Arg1->d.x);
    Arg2->d.y = 0.0;
    Arg1--;
    Arg2--;
@@ -1722,12 +1722,12 @@ void lStkLog(void) {
 void (*StkLog)(void) = dStkLog;
 
 void FPUcplxexp(_CMPLX *x, _CMPLX *z) {
-   double e2x, siny, cosy;
+   LDBL e2x, siny, cosy;
 
    if(fpu >= 387)
       FPUcplxexp387(x, z);
    else {
-      e2x = exp(x->x);
+      e2x = expl(x->x);
       FPUsincos(&x->y, &siny, &cosy);
       z->x = e2x * cosy;
       z->y = e2x * siny;
@@ -1777,12 +1777,12 @@ void mStkPwr(void) {
 void lStkPwr(void) {
    _CMPLX x, y;
 
-   x.x = (double)Arg2->l.x / fg;
-   x.y = (double)Arg2->l.y / fg;
-   y.x = (double)Arg1->l.x / fg;
-   y.y = (double)Arg1->l.y / fg;
+   x.x = (LDBL)Arg2->l.x / fg;
+   x.y = (LDBL)Arg2->l.y / fg;
+   y.x = (LDBL)Arg1->l.x / fg;
+   y.y = (LDBL)Arg1->l.y / fg;
    x = ComplexPower(x, y);
-   if(fabs(x.x) < fgLimit && fabs(x.y) < fgLimit) {
+   if(fabsl(x.x) < fgLimit && fabsl(x.y) < fgLimit) {
       Arg2->l.x = (long)(x.x * fg);
       Arg2->l.y = (long)(x.y * fg);
    }
@@ -2213,7 +2213,7 @@ static int ParseStr(char *Str, int pass) {
    struct ConstArg far *c;
    int ModFlag = 999, Len, Equals = 0, Mod[20], mdstk = 0;
    int jumptype;
-   double const_pi, const_e;
+   LDBL const_pi, const_e;
    double Xctr, Yctr, Xmagfactor, Rotation, Skew;
    LDBL Magnification;
    SetRandom = Randomized = 0;
@@ -2409,18 +2409,18 @@ static int ParseStr(char *Str, int pass) {
       v[vsp].len = strlen(Constants[vsp]);
    }
    cvtcentermag(&Xctr, &Yctr, &Magnification, &Xmagfactor, &Rotation, &Skew);
-   const_pi = atan(1.0) * 4;
-   const_e  = exp(1.0);
+   const_pi = atanl(1.0) * 4;
+   const_e  = expl(1.0);
    v[7].a.d.x = v[7].a.d.y = 0.0;
-   v[11].a.d.x = (double)xdots;
-   v[11].a.d.y = (double)ydots;
-   v[12].a.d.x = (double)maxit;
+   v[11].a.d.x = (LDBL)xdots;
+   v[11].a.d.y = (LDBL)ydots;
+   v[12].a.d.x = (LDBL)maxit;
    v[12].a.d.y = 0;
-   v[13].a.d.x = (double)ismand;
+   v[13].a.d.x = (LDBL)ismand;
    v[13].a.d.y = 0;
    v[14].a.d.x = Xctr;
    v[14].a.d.y = Yctr;
-   v[15].a.d.x = (double)Magnification;
+   v[15].a.d.x = (LDBL)Magnification;
    v[15].a.d.y = Xmagfactor;
    v[16].a.d.x = Rotation;
    v[16].a.d.y = Skew;
@@ -2773,8 +2773,8 @@ int form_per_pixel(void) {
    Arg2--;
 
 
-   v[10].a.d.x = (double)col;
-   v[10].a.d.y = (double)row;
+   v[10].a.d.x = (LDBL)col;
+   v[10].a.d.y = (LDBL)row;
 
    switch(MathType) {
    case D_MATH:

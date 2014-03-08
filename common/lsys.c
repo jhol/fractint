@@ -539,8 +539,8 @@ extern void lsysi_dobang(struct lsys_turtlestatei *cmd);
 
 static void lsysi_dosizedm(struct lsys_turtlestatei *cmd)
 {
-    double angle = (double) cmd->realangle * ANGLE2DOUBLE;
-    double s, c;
+    LDBL angle = (LDBL) cmd->realangle * ANGLE2DOUBLE;
+    LDBL s, c;
     long fixedsin, fixedcos;
 
     FPUsincos(&angle, &s, &c);
@@ -572,8 +572,8 @@ static void lsysi_dosizegf(struct lsys_turtlestatei *cmd)
 
 static void lsysi_dodrawd(struct lsys_turtlestatei *cmd)
 {
-  double angle = (double) cmd->realangle * ANGLE2DOUBLE;
-  double s, c;
+  LDBL angle = (LDBL) cmd->realangle * ANGLE2DOUBLE;
+  LDBL s, c;
   long fixedsin, fixedcos;
   int lastx, lasty;
 
@@ -592,8 +592,8 @@ static void lsysi_dodrawd(struct lsys_turtlestatei *cmd)
 
 static void lsysi_dodrawm(struct lsys_turtlestatei *cmd)
 {
-  double angle = (double) cmd->realangle * ANGLE2DOUBLE;
-  double s, c;
+  LDBL angle = (LDBL) cmd->realangle * ANGLE2DOUBLE;
+  LDBL s, c;
   long fixedsin, fixedcos;
 
   FPUsincos(&angle, &s, &c);
@@ -996,11 +996,11 @@ LSysIDrawTransform(char far *s, struct lsys_turtlestatei *ts)
 
 static void _fastcall lsysi_dosincos(void)
 {
-   double locaspect;
-   double TWOPI = 2.0 * PI;
-   double twopimax;
-   double twopimaxi;
-   double s, c;
+   LDBL locaspect;
+   LDBL TWOPI = 2.0 * PI;
+   LDBL twopimax;
+   LDBL twopimaxi;
+   LDBL s, c;
    int i;
 
    locaspect=screenaspect*xdots/ydots;

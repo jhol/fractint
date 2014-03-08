@@ -41,8 +41,8 @@ extern long (*calcmandfpasm)(void);
 
 extern void cdecl FPUcplxmul(_CMPLX *, _CMPLX *, _CMPLX *);
 extern void cdecl FPUcplxdiv(_CMPLX *, _CMPLX *, _CMPLX *);
-extern void cdecl FPUsincos(double *, double *, double *);
-extern void cdecl FPUsinhcosh(double *, double *, double *);
+extern void cdecl FPUsincos(LDBL *, LDBL *, LDBL *);
+extern void cdecl FPUsinhcosh(LDBL *, LDBL *, LDBL *);
 extern void cdecl FPUcplxlog(_CMPLX *, _CMPLX *);
 extern void cdecl SinCos086(long , long *, long *);
 extern void cdecl SinhCosh086(long , long *, long *);
@@ -63,7 +63,7 @@ extern long far cdecl RegSftFloat(long , int );
 
 /*  fpu387 -- assembler file prototypes */
 
-extern void cdecl FPUaptan387(double *, double *, double *);
+extern void cdecl FPUaptan387(LDBL *, LDBL *, LDBL *);
 extern void cdecl FPUcplxexp387(_CMPLX *, _CMPLX *);
 
 /*  fracsuba -- assembler file prototypes */
@@ -640,7 +640,7 @@ extern _CMPLX PopFloat        (void);
 extern LCMPLX DeQueueLong     (void);
 extern _CMPLX DeQueueFloat    (void);
 extern LCMPLX ComplexSqrtLong (long ,  long);
-extern _CMPLX ComplexSqrtFloat(double, double);
+extern _CMPLX ComplexSqrtFloat(LDBL ,  LDBL);
 extern int    Init_Queue      (unsigned long);
 extern void   Free_Queue      (void);
 extern void   ClearQueue      (void);
