@@ -37,8 +37,18 @@ void FPUaptan387(LDBL *y, LDBL *x, LDBL *atan)
 void FPUcplxmul(_CMPLX *x, _CMPLX *y, _CMPLX *z)
 {
     LDBL tx, ty;
-    tx = (LDBL)x->x * (LDBL)y->x - (LDBL)x->y * (LDBL)y->y;
-    ty = (LDBL)x->x * (LDBL)y->y + (LDBL)x->y * (LDBL)y->x;
+    if (y->y == 0.0) { /* y is real */
+      tx = (LDBL)x->x * (LDBL)y->x;
+      ty = (LDBL)x->y * (LDBL)y->x;
+    }
+    else if (x->y == 0.0) { /* x is real */
+      tx = (LDBL)x->x * (LDBL)y->x;
+      ty = (LDBL)x->x * (LDBL)y->y;
+    }
+    else {
+      tx = (LDBL)x->x * (LDBL)y->x - (LDBL)x->y * (LDBL)y->y;
+      ty = (LDBL)x->x * (LDBL)y->y + (LDBL)x->y * (LDBL)y->x;
+    }
     if (isnan(ty) || isinf(ty))
       z->y = infinity;
     else
@@ -59,6 +69,12 @@ void FPUcplxdiv(_CMPLX *x, _CMPLX *y, _CMPLX *z)
       z->x = infinity;
       z->y = infinity;
       overflow = 1;
+      return;
+    }
+
+    if (yy == 0.0) { /* if y is real */
+      z->x = (LDBL)x->x / yx;
+      z->y = (LDBL)x->y / yx;
     }
     else {
         yxmod = yx/mod;
@@ -103,7 +119,12 @@ void FPUcplxlog(_CMPLX *x, _CMPLX *z)
     if (xx == 0.0 && xy == 0.0) {
         z->x = z->y = 0.0;
         return;
-        }
+    }
+    else if(xy == 0.0) { /* x is real */
+        z->x = logl(xx);
+        z->y = 0.0;
+        return;
+    }
     mod = xx*xx + xy*xy;
     if (isnan(mod) || islessequal(mod,0) || isinf(mod))
       z->x = 0.5;
@@ -122,8 +143,14 @@ void FPUcplxexp387(_CMPLX *x, _CMPLX *z)
     pwr = expl(x->x);
     if (isnan(pwr) || isinf(pwr))
       pwr = 1.0;
-    z->x = (LDBL)(pwr*cosl(y));
-    z->y = (LDBL)(pwr*sinl(y));
+    if (y == 0.0) { /* x is real */
+      z->x = pwr;
+      z->y = 0.0;
+    }
+    else {
+      z->x = (LDBL)(pwr*cosl(y));
+      z->y = (LDBL)(pwr*sinl(y));
+    }
 }
 
 /* Integer Routines */

@@ -2093,7 +2093,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
                new.x = ((LDBL)lnew.x) / fudge;
                new.y = ((LDBL)lnew.y) / fudge;
             }
-            totaldist += sqrtl(sqr(lastz.x-new.x)+sqr(lastz.y-new.y));
+            totaldist += sqrt(sqr(lastz.x-new.x)+sqr(lastz.y-new.y));
             lastz.x = new.x;
             lastz.y = new.y;
          }

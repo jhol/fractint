@@ -211,6 +211,19 @@ _CMPLX ComplexPower(_CMPLX xx, _CMPLX yy) {
          return(z);
       }
 
+   if(yy.y == 0.0) { /* yy is real */
+      if(yy.x == 0.0) { /* x^0 = (1.0, 0.0) */
+	z.x = 1.0;
+	z.y = 0.0;
+	return(z);
+      }
+      if(yy.x == 1.0) { /* x^1 = x */
+	z.x = xx.x;
+	z.y = xx.y;
+	return(z);
+      }
+   }
+
    FPUcplxlog(&xx, &cLog);
    FPUcplxmul(&cLog, &yy, &t);
 
@@ -246,7 +259,7 @@ void Arcsinz(_CMPLX z,_CMPLX *rz)
   _CMPLX tempz1,tempz2;
 
   FPUcplxmul( &z, &z, &tempz1);
-  tempz1.x = 1 - tempz1.x; tempz1.y = -tempz1.y;  /* tempz1 = 1 - tempz1 */
+  tempz1.x = 1.0 - tempz1.x; tempz1.y = -tempz1.y;  /* tempz1 = 1 - tempz1 */
   Sqrtz( tempz1, &tempz1);
 
   tempz2.x = -z.y; tempz2.y = z.x;                /* tempz2 = i*z  */
@@ -262,7 +275,7 @@ void Arccosz(_CMPLX z,_CMPLX *rz)
   _CMPLX temp;
 
   FPUcplxmul( &z, &z, &temp);
-  temp.x -= 1;                                 /* temp = temp - 1 */
+  temp.x -= 1.0;                                 /* temp = temp - 1 */
   Sqrtz( temp, &temp);
 
   temp.x += z.x; temp.y += z.y;                /* temp = z + temp */
@@ -276,7 +289,7 @@ void Arcsinhz(_CMPLX z,_CMPLX *rz)
   _CMPLX temp;
 
   FPUcplxmul( &z, &z, &temp);
-  temp.x += 1;                                 /* temp = temp + 1 */
+  temp.x += 1.0;                                 /* temp = temp + 1 */
   Sqrtz( temp, &temp);
   temp.x += z.x; temp.y += z.y;                /* temp = z + temp */
   FPUcplxlog( &temp, rz);
@@ -287,7 +300,7 @@ void Arccoshz(_CMPLX z,_CMPLX *rz)
 {
   _CMPLX tempz;
   FPUcplxmul( &z, &z, &tempz);
-  tempz.x -= 1;                              /* tempz = tempz - 1 */
+  tempz.x -= 1.0;                              /* tempz = tempz - 1 */
   Sqrtz( tempz, &tempz);
   tempz.x = z.x + tempz.x; tempz.y = z.y + tempz.y;  /* tempz = z + tempz */
   FPUcplxlog( &tempz, rz);
@@ -299,7 +312,7 @@ void Arctanhz(_CMPLX z,_CMPLX *rz)
   _CMPLX temp0,temp1,temp2;
 
   if( z.x == 0.0){
-    rz->x = 0;
+    rz->x = 0.0;
     rz->y = atanl( z.y);
     return;
   }
@@ -308,13 +321,13 @@ void Arctanhz(_CMPLX z,_CMPLX *rz)
       return;
     }
     else if( fabsl( z.x) < 1.0 && z.y == 0.0){
-      rz->x = logl((1+z.x)/(1-z.x))/2;
-      rz->y = 0;
+      rz->x = logl((1.0+z.x)/(1.0-z.x))/2.0;
+      rz->y = 0.0;
       return;
     }
     else{
-      temp0.x = 1 + z.x; temp0.y = z.y;             /* temp0 = 1 + z */
-      temp1.x = 1 - z.x; temp1.y = -z.y;            /* temp1 = 1 - z */
+      temp0.x = 1.0 + z.x; temp0.y = z.y;             /* temp0 = 1 + z */
+      temp1.x = 1.0 - z.x; temp1.y = -z.y;            /* temp1 = 1 - z */
       FPUcplxdiv( &temp0, &temp1, &temp2);
       FPUcplxlog( &temp2, &temp2);
       rz->x = .5*temp2.x; rz->y = .5*temp2.y;       /* rz = .5*temp2 */
@@ -328,10 +341,10 @@ void Arctanz(_CMPLX z,_CMPLX *rz)
 {
   _CMPLX temp0,temp1,temp2,temp3;
   if( z.x == 0.0 && z.y == 0.0)
-    rz->x = rz->y = 0;
+    rz->x = rz->y = 0.0;
   else if( z.x != 0.0 && z.y == 0.0){
     rz->x = atanl( z.x);
-    rz->y = 0;
+    rz->y = 0.0;
   }
   else if( z.x == 0.0 && z.y != 0.0){
     temp0.x = z.y;  temp0.y = 0.0;
@@ -341,8 +354,8 @@ void Arctanz(_CMPLX z,_CMPLX *rz)
   else if( z.x != 0.0 && z.y != 0.0){
 
     temp0.x = -z.y; temp0.y = z.x;                  /* i*z */
-    temp1.x = 1 - temp0.x; temp1.y = -temp0.y;      /* temp1 = 1 - temp0 */
-    temp2.x = 1 + temp0.x; temp2.y = temp0.y;       /* temp2 = 1 + temp0 */
+    temp1.x = 1.0 - temp0.x; temp1.y = -temp0.y;      /* temp1 = 1 - temp0 */
+    temp2.x = 1.0 + temp0.x; temp2.y = temp0.y;       /* temp2 = 1 + temp0 */
 
     FPUcplxdiv( &temp1, &temp2, &temp3);
     FPUcplxlog( &temp3, &temp3);
@@ -428,10 +441,14 @@ _CMPLX ComplexSqrtFloat(LDBL x, LDBL y)
 
    if(x == 0.0 && y == 0.0)
       result.x = result.y = 0.0;
+   else if (y == 0.0 && x > 0.0) { /* number is real and not negative */
+      result.x = sqrtl(x);
+      result.y = 0.0;
+   }
    else
    {
       mag   = sqrtl(sqrtl(x*x + y*y));
-      theta = atan2l(y, x) / 2;
+      theta = atan2l(y, x) / 2.0;
       FPUsincos(&theta, &result.y, &result.x);
       result.x *= mag;
       result.y *= mag;
