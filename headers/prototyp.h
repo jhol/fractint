@@ -41,8 +41,13 @@ extern long (*calcmandfpasm)(void);
 
 extern void cdecl FPUcplxmul(_CMPLX *, _CMPLX *, _CMPLX *);
 extern void cdecl FPUcplxdiv(_CMPLX *, _CMPLX *, _CMPLX *);
+#ifndef XFRACT
+extern void cdecl FPUsincos(double *, double *, double *);
+extern void cdecl FPUsinhcosh(double *, double *, double *);
+#else
 extern void cdecl FPUsincos(LDBL *, LDBL *, LDBL *);
 extern void cdecl FPUsinhcosh(LDBL *, LDBL *, LDBL *);
+#endif
 extern void cdecl FPUcplxlog(_CMPLX *, _CMPLX *);
 extern void cdecl SinCos086(long , long *, long *);
 extern void cdecl SinhCosh086(long , long *, long *);
@@ -639,8 +644,6 @@ extern LCMPLX PopLong         (void);
 extern _CMPLX PopFloat        (void);
 extern LCMPLX DeQueueLong     (void);
 extern _CMPLX DeQueueFloat    (void);
-extern LCMPLX ComplexSqrtLong (long ,  long);
-extern _CMPLX ComplexSqrtFloat(LDBL ,  LDBL);
 extern int    Init_Queue      (unsigned long);
 extern void   Free_Queue      (void);
 extern void   ClearQueue      (void);
@@ -806,6 +809,12 @@ extern void Arcsinhz(_CMPLX z, _CMPLX *rz);
 extern void Arccoshz(_CMPLX z, _CMPLX *rz);
 extern void Arctanhz(_CMPLX z, _CMPLX *rz);
 extern void Arctanz(_CMPLX z, _CMPLX *rz);
+extern LCMPLX ComplexSqrtLong (long ,  long);
+#ifndef XFRACT
+extern _CMPLX ComplexSqrtFloat(double ,  double);
+#else
+extern _CMPLX ComplexSqrtFloat(LDBL ,  LDBL);
+#endif
 
 /*  msccos -- C file prototypes */
 

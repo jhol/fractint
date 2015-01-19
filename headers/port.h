@@ -408,6 +408,7 @@ extern struct DIR_SEARCH DTA;   /* Disk Transfer Area */
 #define LDBL_ROUNDS     DBL_ROUNDS     /* addition rounding: near */
 #endif
 
+#define asinl           asin
 #define atanl           atan
 #define atan2l          atan2
 #define ceill           ceil

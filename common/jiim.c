@@ -72,6 +72,11 @@ int xd, yd;                       /* dots in the window    */
 double xcjul = BIG;
 double ycjul = BIG;
 
+#ifndef XFRACT
+#define fabsl           fabs
+#define sqrtl           sqrt
+#endif
+
 void displays(int x, int y, int fg, int bg, char *str, int len)
 {
    int i;

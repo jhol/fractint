@@ -135,6 +135,7 @@
 #include <conio.h>
 #include <ctype.h>
 #include <dos.h>
+#include <string.h>
 #include "port.h"
 #include "prototyp.h"
 #include "fractype.h"
@@ -592,13 +593,13 @@ get_sound_restart:
    basehertz = uvalues[++k].uval.ival;
    start_showorbit = (char)uvalues[++k].uval.ch.val;
 
-   /* now do any intialization needed and check for soundcard */
+   /* now do any initialization needed and check for soundcard */
    if ((soundflag & 16) && !(old_soundflag & 16)) {
      initfm();
    }
 
    if (i == F6) {
-      get_music_parms();/* see below, for controling fmsynth */
+      get_music_parms();/* see below, for controlling fmsynth */
       goto get_sound_restart;
    }
 
@@ -761,7 +762,7 @@ get_map_restart:
    }
 
    if (i == F6 && menu2 == 1) {
-      get_music_parms();/* see below, for controling fmsynth */
+      get_music_parms();/* see below, for controlling fmsynth */
       goto get_map_restart;
    } else if (i == F6 && menu2 == 2) {
       menu2--;

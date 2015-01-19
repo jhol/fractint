@@ -12,6 +12,10 @@ Miscellaneous fractal-specific code (formerly in CALCFRAC.C)
 #include "fractype.h"
 #include "targa_lc.h"
 
+#ifndef XFRACT
+#define LDBL            double
+#endif
+
 /* routines in this module      */
 
 static void set_Plasma_palette(void);

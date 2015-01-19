@@ -200,7 +200,7 @@ void setMPfunctions(void) {
 _CMPLX ComplexPower(_CMPLX xx, _CMPLX yy) {
    _CMPLX z, cLog, t;
    LDBL e2x;
-   LDBL siny, cosy;
+   double siny, cosy;
 
    /* fixes power bug - if any complaints, backwards compatibility hook
       goes here TIW 3/95 */
@@ -239,8 +239,8 @@ _CMPLX ComplexPower(_CMPLX xx, _CMPLX yy) {
          e2x = 1.0;
 #endif
       FPUsincos(&t.y, &siny, &cosy);
-      z.x = (LDBL) (e2x * cosy);
-      z.y = (LDBL) (e2x * siny);
+      z.x = (double) (e2x * cosy);
+      z.y = (double) (e2x * siny);
    }
    return(z);
 }
@@ -252,6 +252,15 @@ _CMPLX ComplexPower(_CMPLX xx, _CMPLX yy) {
 */
 
 #define Sqrtz(z,rz) (*(rz) = ComplexSqrtFloat((z).x, (z).y))
+
+#ifndef XFRACT
+#define asinl           asin
+#define atanl           atan
+#define atan2l          atan2
+#define fabsl           fabs
+#define logl            log
+#define sqrtl           sqrt
+#endif
 
 /* rz=Arcsin(z)=-i*Log{i*z+sqrt(1-z*z)} */
 void Arcsinz(_CMPLX z,_CMPLX *rz)
@@ -433,10 +442,17 @@ LCMPLX ComplexSqrtLong(long x, long y)
    return result;
 }
 
+#ifndef XFRACT
+_CMPLX ComplexSqrtFloat(double x, double y)
+{
+   double mag;
+   double theta;
+#else
 _CMPLX ComplexSqrtFloat(LDBL x, LDBL y)
 {
    LDBL mag;
    LDBL theta;
+#endif
    _CMPLX  result;
 
    if(x == 0.0 && y == 0.0)
@@ -597,7 +613,11 @@ long far ExpFloat14(long xx) {
    return(RegFg2Float(Ans, (char)f));
 }
 
+#ifndef XFRACT
+double TwoPi;
+#else
 LDBL TwoPi;
+#endif
 _CMPLX temp, BaseLog;
 _CMPLX cdegree = { 3.0, 0.0 }, croot   = { 1.0, 0.0 };
 
@@ -650,7 +670,7 @@ int ComplexNewton(void) {
 
 int ComplexBasin(void) {
    _CMPLX cd1;
-   LDBL mod;
+   double mod;
 
    /* new = ((cdegree-1) * old**cdegree) + croot
             ----------------------------------

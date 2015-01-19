@@ -85,6 +85,13 @@ char far dif_lb[] = {
 /* added for testing autologmap() */
 static long autologmap(void);
 
+#ifndef XFRACT
+#define atan2l          atan2
+#define fabsl           fabs
+#define logl            log
+#define sqrtl           sqrt
+#endif
+
 _LCMPLX linitorbit;
 long lmagnitud, llimit, llimit2, lclosenuff, l16triglim;
 _CMPLX init,tmp,old,new,saved;
@@ -98,7 +105,7 @@ void (_fastcall *plot)(int,int,int) = putcolor_a;
 typedef void (_fastcall *PLOTC)(int,int,int);
 typedef void (_fastcall *GETC)(int,int,int);
 
-LDBL magnitude, rqlim, rqlim2, rqlim_save;
+double magnitude, rqlim, rqlim2, rqlim_save;
 int no_mag_calc = 0;
 int use_old_period = 0;
 int use_old_distest = 0;
@@ -1576,6 +1583,10 @@ static int sticky_orbits(void)
    return(0);
 }
 
+#ifndef XFRACT
+#define LDBL            double
+#endif
+
 static int OneOrTwoPass(void)
 {
    int i;
@@ -1974,7 +1985,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
                new = cmplxbntofloat(&bnnew);
             else if (bf_math==BIGFLT)
                new = cmplxbftofloat(&bfnew);
-            plot_orbit(new.x, new.y, -1);
+            plot_orbit((double)new.x, (double)new.y, -1);
          }
          else
             iplot_orbit(lnew.x, lnew.y, -1);
@@ -2014,7 +2025,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
                {
                int tmpcolor;
                tmpcolor = (int)(((coloriter - 1) % andcolor) + 1);
-               tantable[tmpcolor-1] = new.y/(new.x+.000001);
+               tantable[tmpcolor-1] = (double)(new.y/(new.x+.000001));
                }
             }
          }
@@ -2050,13 +2061,13 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
          }
          else if (inside == FMODI)
          {
-            double mag;
+            LDBL mag;
             if(integerfractal)
             {
                new.x = ((LDBL)lnew.x) / fudge;
                new.y = ((LDBL)lnew.y) / fudge;
             }
-            mag = fmodtest();
+            mag = (LDBL)fmodtest();
             if(mag < closeprox)
                memvalue = mag;
          }
@@ -2074,7 +2085,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
                   magnitude = sqr(new.x) + sqr(new.y);
             if (magnitude < min_orbit)
             {
-               min_orbit = magnitude;
+               min_orbit = (double)magnitude;
                min_index = coloriter + 1;
             }
          }
@@ -2099,13 +2110,13 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
          }
          else if (outside == FMOD)
          {
-            double mag;
+            LDBL mag;
             if(integerfractal)
             {
                new.x = ((LDBL)lnew.x) / fudge;
                new.y = ((LDBL)lnew.y) / fudge;
             }
-            mag = fmodtest();
+            mag = (LDBL)fmodtest();
             if(mag < closeprox)
                memvalue = mag;
          }
@@ -2292,7 +2303,7 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
          new.y = (LDBL)bftofloat(bfnew.y);
       }
       magnitude = sqr(new.x) + sqr(new.y);
-      coloriter = potential(magnitude, coloriter);
+      coloriter = potential((double)magnitude, coloriter);
       if (LogTable || Log_Calc)
          coloriter = logtablecalc(coloriter);
       goto plot_pixel;          /* skip any other adjustments */

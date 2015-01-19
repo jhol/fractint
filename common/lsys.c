@@ -121,6 +121,10 @@ LDBL _fastcall getnumber(char far **str)
    return ret;
 }
 
+#ifndef XFRACT
+#define LDBL            double
+#endif
+
 static int _fastcall readLSystemFile(char *str)
 {
    int c;

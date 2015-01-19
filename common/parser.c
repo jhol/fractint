@@ -54,6 +54,16 @@ struct PEND_OP {
 };
 
 #ifndef XFRACT
+#define atanl           atan
+#define ceill           ceil
+#define expl            exp
+#define fabsl           fabs
+#define floorl          floor
+#define sqrtl           sqrt
+#define LDBL            double
+#endif
+
+#ifndef XFRACT
 /* reuse an array in the decoder */
 JUMP_CONTROL_ST far *jump_control = (JUMP_CONTROL_ST far *) sizeofstring;
 #else
@@ -226,7 +236,7 @@ unsigned int chars_in_formula;
 #endif
 
 #define ChkFloatDenom(denom)\
-    if (fabsl(denom) <= LDBL_MIN) {\
+    if (fabs(denom) <= DBL_MIN) {\
         if (save_release > 1920) overflow = 1;\
         return;\
     }
@@ -359,16 +369,16 @@ static void mStkFunct(void (*fct)(void))   /* call lStk via dStk */
 
 static void lStkFunct(void (*fct)(void))   /* call lStk via dStk */
 {
-   LDBL y;
+   double y;
    /*
       intermediate variable needed for safety because of
       different size of double and long in Arg union
    */
-   y = (LDBL)Arg1->l.y / fg;
-   Arg1->d.x = (LDBL)Arg1->l.x / fg;
+   y = (double)Arg1->l.y / fg;
+   Arg1->d.x = (double)Arg1->l.x / fg;
    Arg1->d.y = y;
    (*fct)();
-   if(fabsl(Arg1->d.x) < fgLimit && fabsl(Arg1->d.y) < fgLimit) {
+   if(fabs(Arg1->d.x) < fgLimit && fabs(Arg1->d.y) < fgLimit) {
       Arg1->l.x = (long)(Arg1->d.x * fg);
       Arg1->l.y = (long)(Arg1->d.y * fg);
    }
@@ -424,8 +434,8 @@ void dRandom(void)
           the same fractals when the srand() function is used. */
    x = NewRandNum() >> (32 - bitshift);
    y = NewRandNum() >> (32 - bitshift);
-   v[7].a.d.x = ((LDBL)x / (1L << bitshift));
-   v[7].a.d.y = ((LDBL)y / (1L << bitshift));
+   v[7].a.d.x = ((double)x / (1L << bitshift));
+   v[7].a.d.y = ((double)y / (1L << bitshift));
 
 }
 
@@ -2215,7 +2225,7 @@ static int ParseStr(char *Str, int pass) {
    int jumptype;
    LDBL const_pi, const_e;
    double Xctr, Yctr, Xmagfactor, Rotation, Skew;
-   LDBL Magnification;
+   long double Magnification;
    SetRandom = Randomized = 0;
    uses_jump = 0;
    jump_index = 0;
@@ -3929,7 +3939,7 @@ static void parser_allocate(void)
    else
       end_dx_array = 0;
 
-   if (strlen(FormStr) > 4000) /* Emperically determined and quite arbitrary */
+   if (strlen(FormStr) > 4000) /* Empirically determined and quite arbitrary */
    { 
      big_formula = 1;
      big_formula_factor = (double)strlen(FormStr) / 4000;
