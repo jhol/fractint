@@ -200,7 +200,11 @@ void setMPfunctions(void) {
 _CMPLX ComplexPower(_CMPLX xx, _CMPLX yy) {
    _CMPLX z, cLog, t;
    LDBL e2x;
+#ifndef XFRACT
    double siny, cosy;
+#else
+   LDBL siny, cosy;
+#endif
 
    /* fixes power bug - if any complaints, backwards compatibility hook
       goes here TIW 3/95 */
