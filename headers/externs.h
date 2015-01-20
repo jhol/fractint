@@ -83,7 +83,7 @@ extern char                  CommandFile[FILE_MAX_PATH];
 extern char                  CommandName[ITEMNAMELEN + 1];
 extern int                   comparegif;
 extern long                  con;
-#ifndef Xfract
+#ifndef XFRACT
 extern double                cosx;
 #else
 extern LDBL                  cosx;
@@ -492,7 +492,7 @@ extern char                  showbox;
 extern int                   showdot;
 extern int                   showfile;
 extern int                   show_orbit;
-#ifndef Xfract
+#ifndef XFRACT
 extern double                sinx;
 #else
 extern LDBL                  sinx;
@@ -781,7 +781,7 @@ extern int                   taborhelp;
 extern int                   Targa_Out;
 extern int                   Targa_Overlay;
 extern char                  temp1[];
-#ifndef Xfract
+#ifndef XFRACT
 extern double                tempsqrx;
 extern double                tempsqry;
 #else
