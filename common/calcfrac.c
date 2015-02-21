@@ -233,9 +233,16 @@ static int showdot_width = 0;
    methods are not used - in these cases a normal
    modulus test is used                              */
 
+#ifndef XFRACT
+double fmodtest(void)
+{
+   double result;
+#else
 LDBL fmodtest(void)
 {
    LDBL result;
+#endif
+   
    if (inside==FMODI && save_release <= 2000) /* for backwards compatibility */
    {
       if (magnitude == 0.0 || no_mag_calc == 0 || integerfractal)

@@ -3742,7 +3742,7 @@ static char *PrepareFormula(FILE * File, int from_prompts1c) {
    }
 
    FormulaStr = (char *)boxx;
-   FormulaStr[0] = (char) 0; /* To permit concantenation later */
+   FormulaStr[0] = (char) 0; /* To permit concatenation later */
 
    Done = 0;
 

@@ -68,7 +68,11 @@ extern long far cdecl RegSftFloat(long , int );
 
 /*  fpu387 -- assembler file prototypes */
 
+#ifndef XFRACT
+extern void cdecl FPUaptan387(double *, double *, double *);
+#else
 extern void cdecl FPUaptan387(LDBL *, LDBL *, LDBL *);
+#endif
 extern void cdecl FPUcplxexp387(_CMPLX *, _CMPLX *);
 
 /*  fracsuba -- assembler file prototypes */
