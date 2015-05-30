@@ -2219,6 +2219,8 @@ struct SYMETRY {
    {"",              0}
 };
 
+static BYTE big_formula = 0;
+
 static int ParseStr(char *Str, int pass) {
    struct ConstArg far *c;
    int ModFlag = 999, Len, Equals = 0, Mod[20], mdstk = 0;
@@ -2229,10 +2231,13 @@ static int ParseStr(char *Str, int pass) {
    SetRandom = Randomized = 0;
    uses_jump = 0;
    jump_index = 0;
+#ifndef XFRACT
    if(pass == 0)
       o = (struct PEND_OP far *)
     ((char far *)typespecific_workarea + total_formula_mem-sizeof(struct PEND_OP) * Max_Ops);
-   else if(used_extra == 1)
+   else
+#endif
+   if(used_extra == 1)
       o = (struct PEND_OP far *)
     ((char far *)typespecific_workarea + total_formula_mem-sizeof(struct PEND_OP) * Max_Ops);
    else
@@ -2696,7 +2701,15 @@ static int ParseStr(char *Str, int pass) {
             }
             break;
       }
-   }
+#ifdef XFRACT
+     if(pass == 0 && posp >= Max_Ops)
+     {
+       if(used_extra == 0)
+	 farmemfree(o);
+       return(1);
+     }
+#endif
+  }
    o[posp].f = (void(far*)(void))0;
    o[posp++].p = 16;
    NextOp = 0;
@@ -2709,7 +2722,7 @@ static int ParseStr(char *Str, int pass) {
          LastOp--;
       }
    }
-   if(pass > 0 && used_extra == 0)
+   if(used_extra == 0)
       farmemfree(o);
    return(0);
 }
@@ -3921,6 +3934,7 @@ void init_misc()
 
 long total_formula_mem;
 BYTE used_extra = 0;
+
 static void parser_allocate(void)
 {
    /* CAE fp changed below for v18 */
@@ -3930,8 +3944,6 @@ static void parser_allocate(void)
 
    long f_size,Store_size,Load_size,v_size, p_size;
    int pass, is_bad_form=0;
-   int big_formula = 0;
-   double big_formula_factor = 1.0;
    long end_dx_array;
 
    if(use_grid)
@@ -3939,11 +3951,19 @@ static void parser_allocate(void)
    else
       end_dx_array = 0;
 
-   if (strlen(FormStr) > 4000) /* Empirically determined and quite arbitrary */
-   { 
-     big_formula = 1;
-     big_formula_factor = (double)strlen(FormStr) / 4000;
+   big_formula = 0;
+
+#ifdef XFRACT
+   if(number_of_ops > 2300) {
+      big_formula = 1;
+      Max_Ops = number_of_ops;
    }
+   else
+#endif
+     Max_Ops = 2300; /* this value uses up about 64K memory */
+
+   Max_Args = (unsigned)(Max_Ops/2.5);
+
    /* TW Jan 1 1996 Made two passes to determine actual values of
       Max_Ops and Max_Args. Now use the end of extraseg if possible, so
       if less than 2048x2048 resolution is used, usually no farmemalloc
@@ -3951,10 +3971,6 @@ static void parser_allocate(void)
    for(pass = 0; pass < 2; pass++)
    {
       free_workarea();
-      if(pass == 0) {
-         Max_Ops = 2300; /* this value uses up about 64K memory */
-         Max_Args = (unsigned)(Max_Ops/2.5);
-      }
       f_size = sizeof(void(far * far *)(void)) * Max_Ops;
       Store_size = sizeof(union Arg far *) * MAX_STORES;
       Load_size = sizeof(union Arg far *) * MAX_LOADS;
@@ -3964,27 +3980,20 @@ static void parser_allocate(void)
          + sizeof(struct PEND_OP) * Max_Ops;
       used_extra = 0;
 
-      if(pass == 0 || is_bad_form)
+      if((pass == 0 || is_bad_form) && big_formula == 0)
       {
-        if (big_formula)
-        {
-          typespecific_workarea = (char far *)farmemalloc((long)(total_formula_mem * big_formula_factor));
-          used_extra = 0;
-        }
-        else
-        {
-          typespecific_workarea = (char far *)MK_FP(extraseg,0);
-          used_extra = 1;
-        }
+         typespecific_workarea = (char far *)MK_FP(extraseg,end_dx_array);
+         used_extra = 1;
       }
-      else if(1L<<16 > end_dx_array + total_formula_mem)
+      else if((1L<<16 > (end_dx_array + total_formula_mem)) && big_formula == 0)
       {
-         typespecific_workarea = (char far *)MK_FP(extraseg,0) + end_dx_array;
+         typespecific_workarea = (char far *)MK_FP(extraseg,end_dx_array);
          used_extra = 1;
       }
       else if(is_bad_form == 0)
       {
-         typespecific_workarea = (char far *)farmemalloc((long)total_formula_mem);
+         typespecific_workarea =
+            (char far *)farmemalloc((long)(f_size+Load_size+Store_size+v_size+p_size));
          used_extra = 0;
       }
       f = (void(far * far *)(void))typespecific_workarea;
@@ -4001,7 +4010,7 @@ static void parser_allocate(void)
             Max_Ops = posp+4;
             Max_Args = vsp+4;
          }
-/*         typespecific_workarea = NULL; This gets set when free_workarea() is called above */
+         /* typespecific_workarea = NULL; This gets set when free_workarea() is called above */
       }
    }
    uses_p1 = uses_p2 = uses_p3 = uses_p4 = uses_p5 = 0;
@@ -4018,7 +4027,7 @@ void free_workarea()
    v = (struct ConstArg far *)0;
    f = (void(far * far *)(void))0;      /* CAE fp */
    pfls = (struct fls far * )0;   /* CAE fp */
-/*   total_formula_mem = 0; Leave this set to last value */
+   /* total_formula_mem = 0; Leave this set so value can display on secret TAB screen */
 
    /* restore extraseg */
    if(integerfractal && !invert)
@@ -5068,6 +5077,9 @@ int frm_prescan (FILE * open_file)
 /*   display_var_list();
    display_const_lists();
 */   count_lists();
+
+/* sprintf(debugmsg, "Ops in formula per prescan() is %u.\n", number_of_ops);
+   stopmsg(0, debugmsg); */
 
 /* sprintf(debugmsg, "Chars in formula per prescan() is %u.\n", chars_in_formula);
    stopmsg(0, debugmsg);

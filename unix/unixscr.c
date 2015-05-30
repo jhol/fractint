@@ -581,6 +581,8 @@ initUnixWindow()
     istruecolor = 0;
     gotrealdac = 1;
     colors = 256;
+    diskisactive = 1;
+    diskvideo = 2;
     for (i = 0; i < colors; i++) {
       pixtab[i] = i;
       ipixtab[i] = i;
