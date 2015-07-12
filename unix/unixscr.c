@@ -1501,7 +1501,8 @@ int block;
 	}
 #endif
 
-	/* Don't check X events every time, since that is expensive */
+        if (checkautosave()) break; /* time to save, exit */
+        /* Don't check X events every time, since that is expensive */
 	skipcount++;
 	if (block==0 && skipcount<25) break;
 	skipcount = 0;

@@ -364,6 +364,50 @@ readticker(void)
 }
 
 /*
+ * checkautosave() determines when auto save is needed.
+ * Returns 1 if yes
+ * Returns 0 if no
+ */
+int checkautosave(void)
+{
+
+long timervalue;
+
+if (saveticks != 0) /* timer running */
+   {
+   /* get current timer value */
+   timervalue = readticker() - savebase;
+   if (timervalue >= saveticks) /* time to check */
+      {
+
+      /* time to save, check for end of row */
+      if (finishrow == -1) /* end of row */
+         {
+          if (calc_status == 1) /* still calculating, check row */
+            {
+             if (got_status == 0 || got_status == 1) /* 1 or 2 pass, or solid guessing */
+                {
+                finishrow = currow;
+                }
+             }
+         else /* done calculating */
+             timedsave = 1; /* do the save */
+
+         }
+      else /* not end of row */
+         if (finishrow != currow) /* start of next row */
+            timedsave = 1; /* do the save */
+
+      } /* time to check */
+   } /* timer running */
+   if (timedsave == 1) {
+     keybuffer = 9999;
+     return(1);
+   }
+   return(0);
+}
+
+/*
 ; ************************* Far Segment RAM Support **************************
 ;
 ;

@@ -28,6 +28,7 @@ extern void tone(int, int);
 extern void snd(int);
 extern void nosnd(void);
 extern long readticker(void);
+extern int  checkautosave(void);
 extern void * farmemalloc(long);
 extern void farmemfree(void *);
 extern void erasesegment(int, int);

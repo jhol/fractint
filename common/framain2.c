@@ -334,8 +334,12 @@ int big_while_loop(int *kbdmore, char *stacked, int resumeflag)
            && (curfractalspecific->flags&NORESUME) == 0) {
             savebase = readticker(); /* calc's start time */
             saveticks = abs(initsavetime);
-            saveticks *= 1092; /* bios ticks/minute */
-            if ((saveticks & 65535L) == 0)
+#ifdef XFRACT
+	    saveticks *= 1000 * 60; /* timer ticks/minute, CLK_TKS = 1000 */
+#else
+	    saveticks *= 1092; /* bios ticks/minute */
+#endif
+	    if ((saveticks & 65535L) == 0)
                ++saveticks; /* make low word nonzero */
             finishrow = -1;
             }
