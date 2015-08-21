@@ -2702,7 +2702,7 @@ static int ParseStr(char *Str, int pass) {
             break;
       }
 #ifdef XFRACT
-     if(pass == 0 && posp >= Max_Ops)
+     if(pass == 0 && posp > Max_Ops)
      {
        if(used_extra == 0)
 	 farmemfree(o);
@@ -3954,13 +3954,15 @@ static void parser_allocate(void)
    big_formula = 0;
 
 #ifdef XFRACT
-   if(number_of_ops > 2300) {
+   if(number_of_ops > 1500) {
       big_formula = 1;
       Max_Ops = number_of_ops;
    }
    else
-#endif
+     Max_Ops = 1500; /* this value uses up about 64K memory */
+#else
      Max_Ops = 2300; /* this value uses up about 64K memory */
+#endif
 
    Max_Args = (unsigned)(Max_Ops/2.5);
 
@@ -3982,15 +3984,15 @@ static void parser_allocate(void)
 
       if((pass == 0 || is_bad_form) && big_formula == 0)
       {
-         typespecific_workarea = (char far *)MK_FP(extraseg,end_dx_array);
+         typespecific_workarea = (char far *)MK_FP(extraseg,0) + end_dx_array;
          used_extra = 1;
       }
       else if((1L<<16 > (end_dx_array + total_formula_mem)) && big_formula == 0)
       {
-         typespecific_workarea = (char far *)MK_FP(extraseg,end_dx_array);
+         typespecific_workarea = (char far *)MK_FP(extraseg,0) + end_dx_array;
          used_extra = 1;
       }
-      else if(is_bad_form == 0)
+      else if(is_bad_form == 0 || big_formula == 1)
       {
          typespecific_workarea =
             (char far *)farmemalloc((long)(f_size+Load_size+Store_size+v_size+p_size));
