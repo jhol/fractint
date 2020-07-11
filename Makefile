@@ -160,9 +160,9 @@ CC = /usr/bin/gcc
 # LIBS = -lX11 -lm -lcurses
 
 ifeq ($(ARCH),athlon64)
-LIBS = -L/usr/X11R6/lib64 -lX11 -lm
+LIBS = -L/usr/X11R6/lib64 -lX11 -lm -no-pie
 else
-LIBS = -L/usr/X11R6/lib -lX11 -lm
+LIBS = -L/usr/X11R6/lib -lX11 -lm -no-pie
 endif
 
 ifeq ($(NCURSES),-DNCURSES)

@@ -25,7 +25,7 @@ int menu_checkkey(int curkey,int choice);
 #define PRODUCTION
 */
 int release=2004;  /* this has 2 implied decimals; increment it every synch */
-int patchlevel=14; /* patchlevel for DOS version */
+int patchlevel=15; /* patchlevel for DOS version */
 
 /* fullscreen_choice options */
 #define CHOICERETURNKEY 1
@@ -50,6 +50,9 @@ int patchlevel=14; /* patchlevel for DOS version */
       &16 for info only message (green box instead of red in DOS vsn)
    */
 #ifdef XFRACT
+#ifndef NCURSES
+extern void xpopup(char *str);
+#endif
 static char far s_errorstart[] = {"*** Error during startup:"};
 extern char * Xmessage;
 #endif

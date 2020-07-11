@@ -2327,10 +2327,15 @@ int StandardFractal(void)       /* per pixel 1/2/b/g, called with row & col set 
          new.x = ((LDBL)lnew.x) / fudge;
          new.y = ((LDBL)lnew.y) / fudge;
       }
-      else if(bf_math==1)
+      else if(bf_math==BIGNUM)
       {
          new.x = (LDBL)bntofloat(bnnew.x);
          new.y = (LDBL)bntofloat(bnnew.y);
+      }
+      else if (bf_math==BIGFLT)
+      {
+         new.x = (LDBL)bftofloat(bfnew.x);
+         new.y = (LDBL)bftofloat(bfnew.y);
       }
       /* Add 7 to overcome negative values on the MANDEL    */
       if (outside == REAL)               /* "real" */

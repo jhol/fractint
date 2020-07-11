@@ -145,7 +145,7 @@ Press F1 for help, "};
       unsigned long vram = (unsigned long)video_vram << 16,
                     need = (unsigned long)info->xdots * info->ydots;
       if (need <= vram) {
-         char over[25]; /* overwrite comments with original resolutions */
+         char over[40]; /* overwrite comments with original resolutions */
          int bppx;      /* bytesperpixel multiplier */
          for (i = 0; i < vidtbllen; ++i) {
             vident = &vidtbl[i];

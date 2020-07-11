@@ -23,7 +23,7 @@ fractal routines.
 
 
 int bf_math = 0;
-double b_const;
+LDBL b_const;
 
 #if (_MSC_VER >= 700)
 #pragma code_seg ("bigsetup_text")     /* place following in an overlay */

@@ -344,6 +344,7 @@ void free_bf_vars()
    bf_save_len = bf_math = 0;
    bnstep=bnlength=intlength=rlength=padding=shiftfactor=decimals=0;
    bflength=rbflength=bfdecimals=0;
+   maxptr = startstack = maxstack = 0;
    }
 
 #ifndef XFRACT

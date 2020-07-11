@@ -19,6 +19,12 @@ static int _fastcall put_extend_blk(int block_id, int block_len, char far * bloc
 static int _fastcall store_item_name(char *);
 static void _fastcall setup_save_info(struct fractal_info far * save_info);
 
+#ifdef XFRACT
+#ifndef NCURSES
+extern void xpopup(char *str);
+#endif
+#endif
+
 /*
                         Save-To-Disk Routines (GIF)
 

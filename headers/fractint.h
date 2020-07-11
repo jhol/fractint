@@ -935,7 +935,7 @@ struct fullscreenvalues
       double dval;      /* when type 'd' or 'f'  */
       int    ival;      /* when type is 'i'      */
       long   Lval;      /* when type is 'L'      */
-      char   sval[16];  /* when type is 's'      */
+      char   sval[22];  /* when type is 's'      */
       char  far *sbuf;  /* when type is 0x100+n  */
       struct {          /* when type is 'l'      */
          int  val;      /*   selected choice     */
