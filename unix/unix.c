@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <ctype.h>
+#include <fcntl.h>
 #include "port.h"
 
 int iocount;

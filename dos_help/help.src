@@ -282,8 +282,12 @@ typically have a short life and are updated frequently. They may have
 bug fixes, and thus be more stable, but they may also have new features
 which very likely have new bugs.
 
-Version 20.4.15 is an update of Fractint 20.0 based on the developer's
-  version 20.4.14.  New features include:
+Version 20.4.16 is an update of Fractint 20.0 based on the developer's
+  version 20.4.15.  New features include:
+
+Patch 16 to Version 20.4.0\
+
+Minor changes to XFractint Makefile to clean up Gentoo compile.\
 
 Patch 15 to Version 20.4.0\
 

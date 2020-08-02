@@ -125,7 +125,8 @@ AFLAGS = -f elf -w+orphan-labels
 
 ifeq ($(AS),/usr/bin/nasm)
 
-CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -DNASM -fno-builtin
+CFLAGS = -I$(HFD) $(DEFINES) -DBIG_ANSI_C -DLINUX -DNASM -fno-builtin
+#CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -DNASM -fno-builtin
 #CFLAGS = -I. -D_CONST $(DEFINES)
 #CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
 #         -march=$(ARCH) -DNASM -fno-builtin
@@ -133,7 +134,8 @@ CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -DNASM -fno-builtin
 
 else
 
-CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -fno-builtin
+CFLAGS = -I$(HFD) $(DEFINES) -DBIG_ANSI_C -DLINUX -fno-builtin
+#CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX -fno-builtin
 #CFLAGS = -I$(HFD) $(DEFINES) -g -DBIG_ANSI_C -DLINUX \
 #         -march=$(ARCH) -fno-builtin
 #CFLAGS = -I. $(DEFINES) -g -DBIG_ANSI_C -DLINUX -Os -fno-builtin
@@ -147,7 +149,8 @@ endif
 # For Sun Solaris 2.x w/SparcCompilerC (cc), use CC = cc.
 # For Sun Solaris 2.x w/GNU gcc, use CC = gcc
 #CC = gcc
-CC = /usr/bin/gcc
+#CC = /usr/bin/gcc
+CC ?=
 
 # For HPUX, use LIBS = -L/usr/lib/X11R4 -lX11 -lm -lcurses -ltermcap
 # For AIX or OSF/1, add -lbsd
@@ -312,7 +315,7 @@ xfractint: fractint.hlp $(SRCFILES)
 	          "HFD=.${HFD}"
 	cd unix ; ${MAKE} all "CC=${CC}" "CFLAGS= -I.${HFD} -I${XFTHFD} ${CFLAGS} ${OPT}" "SRCDIR=${SHRDIR}" \
 	          "AS=${AS}" "AFLAGS=${AFLAGS}" "HFD=.${HFD}"
-	$(CC) -o xfractint $(CFLAGS) $(OPT) $(OBJS) $(U_OBJS) $(LIBS)
+	$(CC) -o xfractint $(CFLAGS) $(LDFLAGS) $(OPT) $(OBJS) $(U_OBJS) $(LIBS)
 #	strip xfractint
 
 fractint:
@@ -333,17 +336,17 @@ tar: clean
 tidy:
 	rm -f $(HOBJS)
 	cd common ; ${MAKE} tidy
-	cd unix ; ${MAKE} tidy
+	cd unix ; ${MAKE} tidy "AS=${AS}"
 
 clean:
 	rm -f build-stamp *~ */*~ core
 	rm -f $(HOBJS) fractint.doc fractint.hlp hc fractint xfractint
 	rm -f $(HFD)/helpdefs.h
 	cd $(COMDIR) ; ${MAKE} clean
-	cd $(UDIR) ; ${MAKE} clean
+	cd $(UDIR) ; ${MAKE} clean "AS=${AS}"
 
 install: xfractint fractint.hlp
-	$(STRIP) xfractint
+#	$(STRIP) xfractint
 	$(INSTALL) -d $(BINDIR) $(MANDIR) $(SRCDIR)/$(PDIR) $(SRCDIR)/$(FDIR) \
 		$(SRCDIR)/$(IDIR) $(SRCDIR)/$(LDIR) $(SRCDIR)/$(MDIR) $(SRCDIR)/$(XDIR)
 	$(INSTALL) xfractint -T $(BINDIR)/xfractint;
