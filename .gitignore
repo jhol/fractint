@@ -1,0 +1,5 @@
+*.o
+*.hlp
+hc
+build/
+helpdefs.h
