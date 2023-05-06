@@ -368,7 +368,7 @@ static void printinstr(void)
 
 static void display_page(char far *title, char far *text, unsigned text_len, int page, int num_pages, int start_margin, int *num_link, LINK far *link)
    {
-   char temp[9];
+   char temp[32];
 
    helptitle();
    helpinstr();
